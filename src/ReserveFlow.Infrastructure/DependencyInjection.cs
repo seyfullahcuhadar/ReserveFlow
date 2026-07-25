@@ -13,6 +13,7 @@ using OpenTelemetry.Trace;
 using ReserveFlow.Application.Abstractions.Authentication;
 using ReserveFlow.Application.Diagnostics;
 using ReserveFlow.Domain.Abstractions;
+using ReserveFlow.Domain.Catalog;
 using ReserveFlow.Domain.Users;
 using ReserveFlow.Infrastructure.Authentication;
 using ReserveFlow.Infrastructure.Options;
@@ -39,6 +40,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IOrganizerProfileRepository, OrganizerProfileRepository>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenProvider, JwtTokenProvider>();
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ReserveFlow.Domain.Abstractions;
+using ReserveFlow.Domain.Catalog;
 using ReserveFlow.Domain.Users;
 
 namespace ReserveFlow.Infrastructure;
@@ -8,6 +9,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     : DbContext(options),IUnitOfWork
 {
     public DbSet<User> Users => Set<User>();
+
+    public DbSet<OrganizerProfile> OrganizerProfiles => Set<OrganizerProfile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
