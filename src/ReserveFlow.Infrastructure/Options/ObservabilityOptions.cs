@@ -11,15 +11,22 @@ public sealed class ObservabilityOptions
     public string ServiceNamespace { get; init; } = "ReserveFlow";
 
     /// <summary>
-    /// OTLP/gRPC endpoint that receives traces (Jaeger's OTLP receiver).
-    /// Local: http://localhost:4317; inside a container: http://jaeger:4317.
+    /// OTLP/gRPC endpoint that receives traces (Alloy/LGTM on the host).
+    /// Local: http://localhost:4317.
     /// </summary>
     public string TracesEndpoint { get; init; } = "http://localhost:4317";
 
     /// <summary>
-    /// OTLP/HTTP endpoint that receives metrics (Prometheus's native OTLP receiver).
+    /// OTLP/HTTP endpoint that receives metrics (Alloy/LGTM on the host).
     /// Programmatic configuration must include the signal path (/v1/metrics).
-    /// Local: http://localhost:9090/api/v1/otlp/v1/metrics.
+    /// Local: http://localhost:4318/v1/metrics.
     /// </summary>
-    public string MetricsEndpoint { get; init; } = "http://localhost:9090/api/v1/otlp/v1/metrics";
+    public string MetricsEndpoint { get; init; } = "http://localhost:4318/v1/metrics";
+
+    /// <summary>
+    /// OTLP/HTTP endpoint that receives logs (Alloy/LGTM on the host).
+    /// Programmatic configuration must include the signal path (/v1/logs).
+    /// Local: http://localhost:4318/v1/logs.
+    /// </summary>
+    public string LogsEndpoint { get; init; } = "http://localhost:4318/v1/logs";
 }

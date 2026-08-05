@@ -117,27 +117,32 @@ curl -X POST http://localhost:5189/api/v1/users/register \
 
 ## Observability
 
-The API emits OpenTelemetry signals through OTLP:
+The API emits OpenTelemetry signals through OTLP to the host Alloy collector (LGTM stack):
 
 ```text
 ReserveFlow.Api
-├── traces  → Jaeger
-└── metrics → Prometheus → Grafana
+├── traces  (OTLP/gRPC) → localhost:4317 → Alloy → Tempo
+├── metrics (OTLP/HTTP) → localhost:4318 → Alloy → Mimir/Prometheus
+└── logs    (OTLP/HTTP) → localhost:4318 → Alloy → Loki
 ```
+
+Docker Compose still runs Jaeger UI, Prometheus, and Grafana for convenience, but **does not** bind host ports 4317/4318 (those belong to Alloy).
 
 Local interfaces:
 
-- Jaeger: [http://localhost:16686](http://localhost:16686)
+- Alloy OTLP: `localhost:4317` (gRPC), `localhost:4318` (HTTP)
+- Jaeger UI: [http://localhost:16686](http://localhost:16686)
 - Prometheus: [http://localhost:9090](http://localhost:9090)
-- Grafana: [http://localhost:3000](http://localhost:3000)
+- Grafana (compose): [http://localhost:3000](http://localhost:3000)
 
-Grafana automatically provisions the Prometheus and Jaeger data sources and the `ReserveFlow — Overview` dashboard. Anonymous Admin access is enabled only for local development.
+Compose Grafana still provisions Prometheus/Jaeger data sources; primary signal path for the running API is Alloy/LGTM.
 
-Configuration is available under the `Observability` section in the API settings. Environment variables can override nested keys by using double underscores, for example:
+Configuration is under the `Observability` section. Override with env vars if needed:
 
 ```bash
-Observability__TracesEndpoint=http://jaeger:4317
-Observability__MetricsEndpoint=http://prometheus:9090/api/v1/otlp/v1/metrics
+Observability__TracesEndpoint=http://localhost:4317
+Observability__MetricsEndpoint=http://localhost:4318/v1/metrics
+Observability__LogsEndpoint=http://localhost:4318/v1/logs
 ```
 
 ## Testing

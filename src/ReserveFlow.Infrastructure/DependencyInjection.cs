@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -88,6 +89,7 @@ public static class DependencyInjection
         {
             var tracesEndpoint = new Uri(observabilityOptions.TracesEndpoint);
             var metricsEndpoint = new Uri(observabilityOptions.MetricsEndpoint);
+            var logsEndpoint = new Uri(observabilityOptions.LogsEndpoint);
 
             var resourceBuilder = ResourceBuilder.CreateDefault()
                 .AddService(
@@ -121,7 +123,21 @@ public static class DependencyInjection
                     {
                         exporter.Endpoint = metricsEndpoint;
                         exporter.Protocol = OtlpExportProtocol.HttpProtobuf;
+                    }))
+                .WithLogging(logging => logging
+                    .SetResourceBuilder(resourceBuilder)
+                    .AddOtlpExporter(exporter =>
+                    {
+                        exporter.Endpoint = logsEndpoint;
+                        exporter.Protocol = OtlpExportProtocol.HttpProtobuf;
                     }));
+
+            services.Configure<OpenTelemetryLoggerOptions>(options =>
+            {
+                options.IncludeFormattedMessage = true;
+                options.IncludeScopes = true;
+                options.ParseStateValues = true;
+            });
         }
     }
 }
