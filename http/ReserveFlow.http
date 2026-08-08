@@ -1,0 +1,200 @@
+### ReserveFlow API — REST Client
+### Extension: "REST Client" (Huachao Mao) — runs .http files
+### Base: http://localhost:5189
+
+@baseUrl = http://localhost:5189
+@contentType = application/json
+
+### Paste ids from responses here (or capture them via @name)
+@userId = 00000000-0000-0000-0000-000000000000
+@organizerId = 00000000-0000-0000-0000-000000000000
+@venueId = 00000000-0000-0000-0000-000000000000
+@accessToken =
+
+############################################
+### 1) Register User
+############################################
+# @name register
+POST {{baseUrl}}/api/v1/users/register
+Content-Type: {{contentType}}
+
+{
+  "email": "organizer@example.com",
+  "password": "Password123!"
+}
+
+###
+# from register response: { "userId": "..." }
+# @userId = {{register.response.body.$.userId}}
+
+############################################
+### 2) Login
+############################################
+# @name login
+POST {{baseUrl}}/api/v1/users/login
+Content-Type: {{contentType}}
+
+{
+  "email": "organizer@example.com",
+  "password": "Password123!"
+}
+
+###
+# from login response: { "accessToken": "..." }
+# @accessToken = {{login.response.body.$.accessToken}}
+
+############################################
+### 3) Create Organizer Profile
+############################################
+# @name createOrganizer
+POST {{baseUrl}}/api/v1/organizers
+Content-Type: {{contentType}}
+
+{
+  "userId": "{{userId}}",
+  "displayName": "Acme Events",
+  "bio": "Tech conferences and workshops"
+}
+
+###
+# @organizerId = {{createOrganizer.response.body.$.organizerId}}
+
+############################################
+### 4) Create Venue
+############################################
+# @name createVenue
+POST {{baseUrl}}/api/v1/venues
+Content-Type: {{contentType}}
+
+{
+  "name": "Istanbul Congress Center",
+  "street": "Darulaceze Cad. No:14",
+  "city": "Istanbul",
+  "country": "TR",
+  "postalCode": "34384",
+  "capacity": 1200,
+  "timeZone": "Europe/Istanbul"
+}
+
+###
+# @venueId = {{createVenue.response.body.$.venueId}}
+
+############################################
+### 5) Create Event (Draft) + TicketTypes
+############################################
+# @name createEvent
+POST {{baseUrl}}/api/v1/events
+Content-Type: {{contentType}}
+
+{
+  "organizerId": "{{organizerId}}",
+  "venueId": "{{venueId}}",
+  "title": "Backend Deep Dive 2026",
+  "description": "DDD, Clean Architecture and .NET practices",
+  "startAtUtc": "2026-09-15T09:00:00Z",
+  "endAtUtc": "2026-09-15T17:00:00Z",
+  "ticketTypes": [
+    {
+      "name": "General",
+      "priceAmount": 250,
+      "currency": "TRY",
+      "quota": 400,
+      "salesStartAtUtc": "2026-08-10T00:00:00Z",
+      "salesEndAtUtc": "2026-09-14T23:59:59Z"
+    },
+    {
+      "name": "VIP",
+      "priceAmount": 750,
+      "currency": "TRY",
+      "quota": 50,
+      "salesStartAtUtc": "2026-08-10T00:00:00Z",
+      "salesEndAtUtc": "2026-09-14T23:59:59Z"
+    }
+  ]
+}
+
+###
+
+############################################
+### Negative scenarios
+############################################
+
+### Register — invalid email → 400
+POST {{baseUrl}}/api/v1/users/register
+Content-Type: {{contentType}}
+
+{
+  "email": "not-an-email",
+  "password": "Password123!"
+}
+
+###
+
+### Create Event — unknown venue → 400
+POST {{baseUrl}}/api/v1/events
+Content-Type: {{contentType}}
+
+{
+  "organizerId": "{{organizerId}}",
+  "venueId": "11111111-1111-1111-1111-111111111111",
+  "title": "Should Fail",
+  "description": "Unknown venue",
+  "startAtUtc": "2026-09-15T09:00:00Z",
+  "endAtUtc": "2026-09-15T17:00:00Z",
+  "ticketTypes": [
+    {
+      "name": "General",
+      "priceAmount": 100,
+      "currency": "TRY",
+      "quota": 10,
+      "salesStartAtUtc": "2026-08-10T00:00:00Z",
+      "salesEndAtUtc": "2026-09-14T23:59:59Z"
+    }
+  ]
+}
+
+###
+
+### Create Event — start >= end → 400
+POST {{baseUrl}}/api/v1/events
+Content-Type: {{contentType}}
+
+{
+  "organizerId": "{{organizerId}}",
+  "venueId": "{{venueId}}",
+  "title": "Bad Dates",
+  "description": "Invalid range",
+  "startAtUtc": "2026-09-15T17:00:00Z",
+  "endAtUtc": "2026-09-15T09:00:00Z",
+  "ticketTypes": [
+    {
+      "name": "General",
+      "priceAmount": 100,
+      "currency": "TRY",
+      "quota": 10,
+      "salesStartAtUtc": "2026-08-10T00:00:00Z",
+      "salesEndAtUtc": "2026-09-14T23:59:59Z"
+    }
+  ]
+}
+
+###
+
+### Create Venue — capacity 0 → 400
+POST {{baseUrl}}/api/v1/venues
+Content-Type: {{contentType}}
+
+{
+  "name": "Invalid Hall",
+  "street": "Main 1",
+  "city": "Istanbul",
+  "country": "TR",
+  "postalCode": null,
+  "capacity": 0,
+  "timeZone": "Europe/Istanbul"
+}
+
+###
+
+### Health
+GET {{baseUrl}}/api/v1/health

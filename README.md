@@ -20,8 +20,9 @@ Implemented:
 - Jaeger, Prometheus, and Grafana development stack
 - Custom registration span and metric
 - Architecture and booking tests
+- GitHub Actions CI (build + test on `main` and pull requests)
 
-The remaining ticketing, scheduling, payment, outbox, authentication, and authorization flows are planned incrementally. CI/CD automation will also be introduced progressively to validate build, test, containerization, security scanning, deployment, and rollback practices. See [the project plan](docs/PROJECT.md) and [use-case catalog](docs/USE_CASES.md).
+The remaining ticketing, scheduling, payment, outbox, authentication, and authorization flows are planned incrementally. CI currently runs build and test on GitHub Actions; containerization, security scanning, deployment, and rollback will be added progressively. See [the project plan](docs/PROJECT.md) and [use-case catalog](docs/USE_CASES.md).
 
 ## Architecture
 
@@ -62,7 +63,7 @@ Key rules:
 - Grafana for dashboards
 - xUnit and NetArchTest
 - Docker Compose
-- CI/CD automation (planned)
+- CI/CD automation (GitHub Actions CI: build + test)
 
 ## Getting started
 

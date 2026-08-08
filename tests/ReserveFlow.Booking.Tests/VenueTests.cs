@@ -12,13 +12,13 @@ public class VenueTests
         var address = Address.Create("Main St 1", "Istanbul", "TR", "34000");
 
         var venue = Venue.Create(
-            "  Kongre Merkezi  ",
+            "  Congress Center  ",
             address,
             500,
             "Europe/Istanbul",
             createdAt);
 
-        Assert.Equal("Kongre Merkezi", venue.Name);
+        Assert.Equal("Congress Center", venue.Name);
         Assert.Equal(500, venue.Capacity);
         Assert.Equal("Europe/Istanbul", venue.TimeZone);
         Assert.Equal(createdAt, venue.CreatedAtUtc);
