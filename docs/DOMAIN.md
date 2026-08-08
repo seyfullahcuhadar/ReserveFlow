@@ -49,7 +49,7 @@ flowchart TB
 | Context | Responsibility | Aggregate Roots |
 |---------|------------|-------------------|
 | **Identity** | Authentication, role management | `User` |
-| **Catalog** | Event catalog, ticket type definition | `Event`, `OrganizerProfile` |
+| **Catalog** | Event catalog, ticket type definition | `Event`, `OrganizerProfile`, `Venue` |
 | **Scheduling** | Appointment scheduling, availability | `Provider`, `Appointment` |
 | **Booking** | Reservation business rules, orders | `Order`, `Reservation` |
 | **Payment** | Payment collection and refunds | `Payment` |
@@ -100,7 +100,7 @@ OrganizerProfile
 └── Events: EventId[] (ID references only)
 ```
 
-### Venue (Entity)
+### Venue (Aggregate Root)
 
 ```text
 Venue
@@ -108,8 +108,16 @@ Venue
 ├── Name: string
 ├── Address: Address (value object)
 ├── Capacity: int
-└── TimeZone: string
+├── TimeZone: string
+└── CreatedAt: DateTime
 ```
+
+**Business rules:**
+- Capacity must be greater than zero
+- Venue can exist independently of Event; Event references Venue by Id
+
+**Domain Events:**
+- `VenueCreated`
 
 ### Event (Aggregate Root)
 

@@ -42,6 +42,8 @@ public static class DependencyInjection
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IOrganizerProfileRepository, OrganizerProfileRepository>();
+        services.AddScoped<IVenueRepository, VenueRepository>();
+        services.AddScoped<IEventRepository, EventRepository>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenProvider, JwtTokenProvider>();
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());

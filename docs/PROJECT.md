@@ -134,7 +134,7 @@ docs/
 ## Scope Guardrails
 
 1. A new feature is added only if it verifies an NFR.
-2. Each bounded context has no more than two aggregate roots.
+2. Prefer few aggregate roots per bounded context; add a new root only when it has an independent lifecycle (e.g. Venue exists without Event).
 3. Measurement evidence (a chart, log, or test report) is required at the end of every sprint.
 
 ## Phase Plan

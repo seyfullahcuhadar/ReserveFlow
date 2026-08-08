@@ -93,7 +93,7 @@ The Domain and Application layers are organized **feature-first**. Each feature 
 | Folder | Bounded Context | Aggregate Roots |
 |--------|-----------------|-------------------|
 | `Users/` | Identity | User |
-| `Catalog/` | Catalog | Event, OrganizerProfile |
+| `Catalog/` | Catalog | Event, OrganizerProfile, Venue |
 | `Scheduling/` | Scheduling | Provider, Appointment |
 | `Bookings/` | Booking | Order, Reservation |
 | `Payments/` | Payment | Payment |

@@ -12,6 +12,10 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
     public DbSet<OrganizerProfile> OrganizerProfiles => Set<OrganizerProfile>();
 
+    public DbSet<Venue> Venues => Set<Venue>();
+
+    public DbSet<Event> Events => Set<Event>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);

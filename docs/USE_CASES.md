@@ -182,14 +182,25 @@ sequenceDiagram
 | **NFR** | NFR-M01, NFR-M02 |
 | **Phase** | F1 |
 
+### UC-CAT-06 — Create Venue
+
+| Field | Value |
+|------|-------|
+| **Actor** | Organizer |
+| **Summary** | Create a reusable Venue (name, address, capacity, time zone) independent of any Event. |
+| **Main Flow** | 1. Provide venue details. 2. Persist Venue aggregate. 3. Return VenueId for later Event creation. |
+| **Domain** | Venue is an aggregate root; Capacity > 0; Address is a value object. |
+| **NFR** | NFR-M01, NFR-M02 |
+| **Phase** | F1 |
+
 ### UC-CAT-02 — Create Event (Draft) + Add TicketType
 
 | Field | Value |
 |------|-------|
 | **Actor** | Organizer |
-| **Summary** | A Draft Event with at least one TicketType (price, quota, sales window). |
-| **Main Flow** | 1. Venue + title + StartAt/EndAt. 2. Status is `Draft`. 3. Add TicketType (Quota, Price, SalesStart/End). |
-| **Domain** | StartAt < EndAt; TicketType is within the Event aggregate. |
+| **Summary** | A Draft Event with at least one TicketType (price, quota, sales window), referencing an existing Venue. |
+| **Main Flow** | 1. Existing VenueId + title + StartAt/EndAt. 2. Status is `Draft`. 3. Add TicketType (Quota, Price, SalesStart/End). |
+| **Domain** | StartAt < EndAt; TicketType is within the Event aggregate; VenueId must reference an existing Venue. |
 | **NFR** | NFR-M02, NFR-S04 |
 | **Phase** | F1 |
 
@@ -377,8 +388,9 @@ flowchart LR
 | 1 | **UC-ID-01** Registration | JWT not required; User aggregate + hash |
 | 2 | **UC-ID-02** Login (simple token or dev stub) | Full JWT hardening in F2 |
 | 3 | **UC-CAT-01** Organizer profile | UserId reference |
-| 4 | **UC-CAT-02** Event Draft + TicketType | Includes Venue |
-| 5 | **UC-CAT-03** Publish | Domain rules + unit test |
+| 4 | **UC-CAT-06** Create Venue | Independent Venue aggregate |
+| 5 | **UC-CAT-02** Event Draft + TicketType | References existing VenueId |
+| 6 | **UC-CAT-03** Publish | Domain rules + unit test |
 
 **Completion gate:** An Organizer can produce a published Event; NFR-M02 domain tests.
 
@@ -535,6 +547,7 @@ Details: [PROJECT.md — Outside the MVP](PROJECT.md#out-of-mvp-scope-do-not-imp
 | UC-ID-01 | `Users.RegisterUser` |
 | UC-ID-02 | `Users.LoginUser` |
 | UC-CAT-01 | `Catalog.CreateOrganizerProfile` |
+| UC-CAT-06 | `Catalog.CreateVenue` |
 | UC-CAT-02 | `Catalog.CreateEvent`, `Catalog.AddTicketType` |
 | UC-CAT-03 | `Catalog.PublishEvent` |
 | UC-CAT-04 | `Catalog.ListEvents` |
