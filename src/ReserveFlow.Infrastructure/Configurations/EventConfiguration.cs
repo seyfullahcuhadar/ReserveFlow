@@ -97,6 +97,10 @@ internal sealed class EventConfiguration : IEntityTypeConfiguration<Event>
                 .HasColumnName("is_active")
                 .IsRequired();
 
+            ticket.Property(t => t.CreatedAtUtc)
+                .HasColumnName("created_at_utc")
+                .IsRequired();
+
             ticket.OwnsOne(t => t.Price, money =>
             {
                 money.Property(m => m.Amount)

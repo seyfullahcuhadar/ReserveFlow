@@ -12,8 +12,9 @@ public sealed class TicketType : Entity
         Money price,
         int quota,
         DateTime salesStartAtUtc,
-        DateTime salesEndAtUtc)
-        : base(id)
+        DateTime salesEndAtUtc,
+        DateTime createdAtUtc)
+        : base(id, createdAtUtc)
     {
         Name = name;
         Price = price;
@@ -47,7 +48,8 @@ public sealed class TicketType : Entity
         Money price,
         int quota,
         DateTime salesStartAtUtc,
-        DateTime salesEndAtUtc)
+        DateTime salesEndAtUtc,
+        DateTime createdAtUtc)
     {
         ArgumentNullException.ThrowIfNull(price);
 
@@ -72,6 +74,7 @@ public sealed class TicketType : Entity
             price,
             quota,
             salesStartAtUtc,
-            salesEndAtUtc);
+            salesEndAtUtc,
+            createdAtUtc);
     }
 }

@@ -34,6 +34,8 @@ public sealed class CreateEventCommandHandler(
             throw new ValidationException("Venue was not found.");
         }
 
+        var createdAtUtc = timeProvider.GetUtcNow().UtcDateTime;
+
         var @event = Event.CreateDraft(
             command.OrganizerId,
             command.VenueId,
@@ -41,7 +43,7 @@ public sealed class CreateEventCommandHandler(
             command.Description,
             command.StartAtUtc,
             command.EndAtUtc,
-            timeProvider.GetUtcNow().UtcDateTime);
+            createdAtUtc);
 
         foreach (var ticketType in command.TicketTypes)
         {
@@ -51,7 +53,8 @@ public sealed class CreateEventCommandHandler(
                 price,
                 ticketType.Quota,
                 ticketType.SalesStartAtUtc,
-                ticketType.SalesEndAtUtc);
+                ticketType.SalesEndAtUtc,
+                createdAtUtc);
         }
 
         eventRepository.Add(@event);

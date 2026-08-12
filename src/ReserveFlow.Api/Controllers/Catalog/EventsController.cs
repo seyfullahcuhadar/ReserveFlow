@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ReserveFlow.Api.Controllers.Catalog.Dtos;
 using ReserveFlow.Application.Catalog.CreateEvent;
+using ReserveFlow.Application.Catalog.PublishEvent;
 using ReserveFlow.Application.Messaging;
 
 namespace ReserveFlow.Api.Controllers.Catalog;
@@ -40,4 +41,18 @@ public sealed class EventsController : ControllerBase
             nameof(Create),
             new CreateEventResponse(eventId));
     }
+
+    [HttpPost("{eventId:guid}/publish")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Publish(
+        Guid eventId,
+        [FromServices] ICommandHandler<PublishEventCommand> handler,
+        CancellationToken cancellationToken)
+    {
+        await handler.HandleAsync(new PublishEventCommand(eventId), cancellationToken);
+        return NoContent();
+    }
+
 }

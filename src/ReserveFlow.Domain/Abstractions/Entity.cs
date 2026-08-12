@@ -2,9 +2,10 @@ namespace ReserveFlow.Domain.Abstractions;
 
 public abstract class Entity : IEquatable<Entity>
 {
-    protected Entity(Guid id)
+    protected Entity(Guid id, DateTime createdAtUtc)
     {
         Id = id;
+        CreatedAtUtc = createdAtUtc;
     }
 
     protected Entity()
@@ -12,6 +13,8 @@ public abstract class Entity : IEquatable<Entity>
     }
 
     public Guid Id { get; init; }
+
+    public DateTime CreatedAtUtc { get; private set; }
 
     public static bool operator ==(Entity? left, Entity? right)
     {

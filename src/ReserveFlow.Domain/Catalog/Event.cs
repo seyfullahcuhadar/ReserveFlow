@@ -17,7 +17,7 @@ public sealed class Event : AggregateRoot
         DateTime startAtUtc,
         DateTime endAtUtc,
         DateTime createdAtUtc)
-        : base(id)
+        : base(id, createdAtUtc)
     {
         OrganizerId = organizerId;
         VenueId = venueId;
@@ -26,7 +26,6 @@ public sealed class Event : AggregateRoot
         StartAtUtc = startAtUtc;
         EndAtUtc = endAtUtc;
         Status = EventStatus.Draft;
-        CreatedAtUtc = createdAtUtc;
     }
 
     private Event()
@@ -48,8 +47,6 @@ public sealed class Event : AggregateRoot
     public EventStatus Status { get; private set; }
 
     public DateTime? PublishedAtUtc { get; private set; }
-
-    public DateTime CreatedAtUtc { get; private set; }
 
     public IReadOnlyList<TicketType> TicketTypes => _ticketTypes;
 
@@ -108,11 +105,12 @@ public sealed class Event : AggregateRoot
         Money price,
         int quota,
         DateTime salesStartAtUtc,
-        DateTime salesEndAtUtc)
+        DateTime salesEndAtUtc,
+        DateTime createdAtUtc)
     {
         EnsureEditable();
 
-        var ticketType = TicketType.Create(name, price, quota, salesStartAtUtc, salesEndAtUtc);
+        var ticketType = TicketType.Create(name, price, quota, salesStartAtUtc, salesEndAtUtc, createdAtUtc);
         _ticketTypes.Add(ticketType);
         return ticketType;
     }

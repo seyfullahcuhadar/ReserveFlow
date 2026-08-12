@@ -17,7 +17,7 @@ public class DomainSharedTests
     [Fact]
     public void AggregateRoot_ShouldCollectDomainEvents()
     {
-        var aggregate = new TestAggregate(Guid.NewGuid());
+        var aggregate = new TestAggregate(Guid.NewGuid(), DateTime.UtcNow);
         var domainEvent = new TestDomainEvent();
 
         aggregate.DoSomething(domainEvent);
@@ -35,7 +35,7 @@ public class DomainSharedTests
         }
     }
 
-    private sealed class TestAggregate(Guid id) : AggregateRoot(id)
+    private sealed class TestAggregate(Guid id, DateTime createdAtUtc) : AggregateRoot(id, createdAtUtc)
     {
         public void DoSomething(IDomainEvent domainEvent) => RaiseDomainEvent(domainEvent);
     }

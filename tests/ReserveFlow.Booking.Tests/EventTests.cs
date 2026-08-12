@@ -65,7 +65,8 @@ public class EventTests
             Money.Create(250m, "try"),
             100,
             now,
-            now.AddDays(6));
+            now.AddDays(6),
+            now);
 
         Assert.Single(@event.TicketTypes);
         Assert.Equal("VIP", ticketType.Name);
@@ -73,6 +74,7 @@ public class EventTests
         Assert.Equal("TRY", ticketType.Price.Currency);
         Assert.Equal(0, ticketType.SoldCount);
         Assert.True(ticketType.IsActive);
+        Assert.Equal(now, ticketType.CreatedAtUtc);
     }
 
     [Fact]
@@ -94,6 +96,7 @@ public class EventTests
                 Money.Create(100m),
                 50,
                 now.AddDays(2),
-                now.AddDays(1)));
+                now.AddDays(1),
+                now));
     }
 }

@@ -14,12 +14,11 @@ public sealed class User : AggregateRoot
         string passwordHash,
         UserStatus status,
         DateTime createdAtUtc)
-        : base(id)
+        : base(id, createdAtUtc)
     {
         Email = email;
         PasswordHash = passwordHash;
         Status = status;
-        CreatedAtUtc = createdAtUtc;
     }
 
     private User()
@@ -33,8 +32,6 @@ public sealed class User : AggregateRoot
     public UserStatus Status { get; private set; }
 
     public IReadOnlyList<RoleName> Roles => _roles;
-
-    public DateTime CreatedAtUtc { get; private set; }
 
     public static User Register(Email email, string passwordHash, DateTime createdAtUtc)
     {

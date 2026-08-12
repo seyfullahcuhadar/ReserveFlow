@@ -10,12 +10,11 @@ public sealed class OrganizerProfile : AggregateRoot
         string displayName,
         string? bio,
         DateTime createdAtUtc)
-        : base(id)
+        : base(id, createdAtUtc)
     {
         UserId = userId;
         DisplayName = displayName;
         Bio = bio;
-        CreatedAtUtc = createdAtUtc;
     }
 
     private OrganizerProfile()
@@ -27,8 +26,6 @@ public sealed class OrganizerProfile : AggregateRoot
     public string DisplayName { get; private set; } = null!;
 
     public string? Bio { get; private set; }
-
-    public DateTime CreatedAtUtc { get; private set; }
 
     public static OrganizerProfile Create(
         Guid userId,

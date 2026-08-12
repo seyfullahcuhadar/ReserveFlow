@@ -13,13 +13,12 @@ public sealed class Venue : AggregateRoot
         int capacity,
         string timeZone,
         DateTime createdAtUtc)
-        : base(id)
+        : base(id, createdAtUtc)
     {
         Name = name;
         Address = address;
         Capacity = capacity;
         TimeZone = timeZone;
-        CreatedAtUtc = createdAtUtc;
     }
 
     private Venue()
@@ -33,8 +32,6 @@ public sealed class Venue : AggregateRoot
     public int Capacity { get; private set; }
 
     public string TimeZone { get; private set; } = null!;
-
-    public DateTime CreatedAtUtc { get; private set; }
 
     public static Venue Create(
         string name,
