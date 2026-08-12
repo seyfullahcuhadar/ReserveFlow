@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using FluentValidation;
 using ReserveFlow.Application.Abstractions.Authentication;
 using ReserveFlow.Application.Diagnostics;
@@ -11,7 +10,7 @@ using ValidationException = ReserveFlow.Application.Exceptions.ValidationExcepti
 
 namespace ReserveFlow.Application.Users.RegisterUser;
 
-public class RegisterUserCommandHandler:ICommandHandler<RegisterUserCommand,Guid>
+public class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, Guid>
 {
     private readonly IValidator<RegisterUserCommand> _validator;
     private readonly IUserRepository _userRepository;
@@ -19,7 +18,8 @@ public class RegisterUserCommandHandler:ICommandHandler<RegisterUserCommand,Guid
     private readonly TimeProvider _timeProvider;
     private readonly IUnitOfWork _unitOfWork;
 
-    public RegisterUserCommandHandler( IValidator<RegisterUserCommand> validator,
+    public RegisterUserCommandHandler(
+        IValidator<RegisterUserCommand> validator,
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
         TimeProvider timeProvider,
@@ -42,15 +42,7 @@ public class RegisterUserCommandHandler:ICommandHandler<RegisterUserCommand,Guid
             throw new ValidationException(string.Join(" ", validation.Errors.Select(e => e.ErrorMessage)));
         }
 
-        Email email;
-        try
-        {
-            email = Email.Create(command.Email);
-        }
-        catch (ArgumentException ex)
-        {
-            throw new ValidationException(ex.Message);
-        }
+        var email = Email.Create(command.Email);
 
         if (await _userRepository.ExistsByEmailAsync(email, cancellationToken))
         {

@@ -22,16 +22,7 @@ public sealed class LoginUserCommandHandler(
             throw new ValidationException(string.Join(" ", validation.Errors.Select(e => e.ErrorMessage)));
         }
 
-        Email email;
-        try
-        {
-            email = Email.Create(command.Email);
-        }
-        catch (ArgumentException)
-        {
-            throw new UnauthorizedException("Invalid credentials.");
-        }
-
+        var email = Email.Create(command.Email);
         var user = await userRepository.GetByEmailAsync(email, cancellationToken);
 
         if (user is null || !passwordHasher.Verify(command.Password, user.PasswordHash))

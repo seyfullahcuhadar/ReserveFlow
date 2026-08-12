@@ -1,14 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
-using ReserveFlow.Api.Controllers.Users;
+using ReserveFlow.Api.Controllers.Users.Dtos;
 using ReserveFlow.Application.Messaging;
 using ReserveFlow.Application.Users.LoginUser;
 using ReserveFlow.Application.Users.RegisterUser;
 
-namespace ReserveFlow.Api.Controllers;
+namespace ReserveFlow.Api.Controllers.Users;
 
 [ApiController]
 [Route("api/v1/users")]
-public sealed class UsersController() : ControllerBase
+public sealed class UsersController : ControllerBase
 {
     [HttpPost("register")]
     [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status201Created)]
@@ -42,5 +42,3 @@ public sealed class UsersController() : ControllerBase
         return Ok(new LoginUserResponse(token));
     }
 }
-
-

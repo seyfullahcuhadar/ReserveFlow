@@ -34,32 +34,24 @@ public sealed class CreateEventCommandHandler(
             throw new ValidationException("Venue was not found.");
         }
 
-        Event @event;
-        try
-        {
-            @event = Event.CreateDraft(
-                command.OrganizerId,
-                command.VenueId,
-                command.Title,
-                command.Description,
-                command.StartAtUtc,
-                command.EndAtUtc,
-                timeProvider.GetUtcNow().UtcDateTime);
+        var @event = Event.CreateDraft(
+            command.OrganizerId,
+            command.VenueId,
+            command.Title,
+            command.Description,
+            command.StartAtUtc,
+            command.EndAtUtc,
+            timeProvider.GetUtcNow().UtcDateTime);
 
-            foreach (var ticketType in command.TicketTypes)
-            {
-                var price = Money.Create(ticketType.PriceAmount, ticketType.Currency);
-                @event.AddTicketType(
-                    ticketType.Name,
-                    price,
-                    ticketType.Quota,
-                    ticketType.SalesStartAtUtc,
-                    ticketType.SalesEndAtUtc);
-            }
-        }
-        catch (ArgumentException ex)
+        foreach (var ticketType in command.TicketTypes)
         {
-            throw new ValidationException(ex.Message);
+            var price = Money.Create(ticketType.PriceAmount, ticketType.Currency);
+            @event.AddTicketType(
+                ticketType.Name,
+                price,
+                ticketType.Quota,
+                ticketType.SalesStartAtUtc,
+                ticketType.SalesEndAtUtc);
         }
 
         eventRepository.Add(@event);

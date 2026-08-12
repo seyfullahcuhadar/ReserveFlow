@@ -6,10 +6,10 @@
 @contentType = application/json
 
 ### Paste ids from responses here (or capture them via @name)
-@userId = 00000000-0000-0000-0000-000000000000
-@organizerId = 00000000-0000-0000-0000-000000000000
-@venueId = 00000000-0000-0000-0000-000000000000
-@accessToken =
+@userId = 3a809f18-1f34-43a6-8f12-b7df1626f155
+@organizerId = aea5fd68-556c-4481-9603-87da20870ea0
+@venueId = 8cb95869-a815-4106-ae7e-63e6f0d328f5
+@accessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYTgwOWYxOC0xZjM0LTQzYTYtOGYxMi1iN2RmMTYyNmYxNTUiLCJlbWFpbCI6Im9yZ2FuaXplckBleGFtcGxlLmNvbSIsImp0aSI6IjBmMmUwNzljLWYxYmQtNGUzOC04ZTRlLTJiZDgxOTQzMjNkMSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkN1c3RvbWVyIiwibmJmIjoxNzg2NDcyNTE3LCJleHAiOjE3ODY0NzYxMTcsImlzcyI6IlJlc2VydmVGbG93IiwiYXVkIjoiUmVzZXJ2ZUZsb3cifQ.zpLygEHU65QWHK799JKokEtbMF6f5tqarQ2lgm6h1Ls
 
 ############################################
 ### 1) Register User

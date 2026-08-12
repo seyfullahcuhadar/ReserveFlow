@@ -1,3 +1,3 @@
-namespace ReserveFlow.Api.Controllers.Catalog;
+namespace ReserveFlow.Api.Controllers.Catalog.Dtos;
 
 public sealed record CreateOrganizerProfileResponse(Guid OrganizerId);

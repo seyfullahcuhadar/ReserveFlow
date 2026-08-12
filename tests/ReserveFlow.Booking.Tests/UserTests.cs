@@ -1,3 +1,4 @@
+using ReserveFlow.Domain.Exceptions;
 using ReserveFlow.Domain.Shared;
 using ReserveFlow.Domain.Users;
 
@@ -19,7 +20,7 @@ public class UserTests
     [InlineData("@missing-local.com")]
     public void Email_Create_ShouldRejectInvalidValues(string value)
     {
-        Assert.Throws<ArgumentException>(() => Email.Create(value));
+        Assert.Throws<DomainValidationException>(() => Email.Create(value));
     }
 
     [Fact]
@@ -43,7 +44,7 @@ public class UserTests
     {
         var email = Email.Create("customer@example.com");
 
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<DomainValidationException>(() =>
             User.Register(email, " ", DateTime.UtcNow));
     }
 }

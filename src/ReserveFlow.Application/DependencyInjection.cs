@@ -31,13 +31,32 @@ public static class DependencyInjection
         {
             foreach (var handlerInterface in GetHandlerInterfaces(implementation, openHandlerTypes))
             {
-                services.AddScoped(handlerInterface, implementation);
+                var openGeneric = handlerInterface.GetGenericTypeDefinition();
+
+                if (openGeneric == typeof(ICommandHandler<>) || openGeneric == typeof(ICommandHandler<,>))
+                {
+                    services.AddScoped(implementation);
+                    services.AddScoped(handlerInterface, sp =>
+                    {
+                        var inner = sp.GetRequiredService(implementation);
+                        var decoratorType = openGeneric == typeof(ICommandHandler<>)
+                            ? typeof(ExceptionMappingCommandHandler<>).MakeGenericType(handlerInterface.GenericTypeArguments)
+                            : typeof(ExceptionMappingCommandHandler<,>).MakeGenericType(handlerInterface.GenericTypeArguments);
+
+                        return ActivatorUtilities.CreateInstance(sp, decoratorType, inner);
+                    });
+                }
+                else
+                {
+                    services.AddScoped(handlerInterface, implementation);
+                }
             }
         }
     }
 
     private static bool IsConcreteClass(Type type) =>
-        type is { IsAbstract: false, IsInterface: false };
+        type is { IsAbstract: false, IsInterface: false }
+        && !type.Name.StartsWith("ExceptionMappingCommandHandler", StringComparison.Ordinal);
 
     private static IEnumerable<Type> GetHandlerInterfaces(Type implementation, Type[] openHandlerTypes) =>
         implementation.GetInterfaces()

@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using ReserveFlow.Api.Controllers.Catalog;
+using ReserveFlow.Api.Controllers.Catalog.Dtos;
 using ReserveFlow.Application.Catalog.CreateOrganizerProfile;
 using ReserveFlow.Application.Messaging;
 
-namespace ReserveFlow.Api.Controllers;
+namespace ReserveFlow.Api.Controllers.Catalog;
 
 [ApiController]
 [Route("api/v1/organizers")]

@@ -1,4 +1,5 @@
 using ReserveFlow.Domain.Catalog;
+using ReserveFlow.Domain.Exceptions;
 using ReserveFlow.Domain.Shared;
 using Event = ReserveFlow.Domain.Catalog.Event;
 
@@ -35,7 +36,7 @@ public class EventTests
     {
         var now = DateTime.UtcNow;
 
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<DomainValidationException>(() =>
             Event.CreateDraft(
                 Guid.NewGuid(),
                 Guid.NewGuid(),
@@ -87,7 +88,7 @@ public class EventTests
             now.AddDays(7).AddHours(3),
             now);
 
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<DomainValidationException>(() =>
             @event.AddTicketType(
                 "VIP",
                 Money.Create(100m),

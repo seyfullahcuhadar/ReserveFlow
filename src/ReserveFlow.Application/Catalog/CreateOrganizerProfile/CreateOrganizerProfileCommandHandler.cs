@@ -33,19 +33,11 @@ public sealed class CreateOrganizerProfileCommandHandler(
             throw new ConflictException("Organizer profile already exists for this user.");
         }
 
-        OrganizerProfile profile;
-        try
-        {
-            profile = OrganizerProfile.Create(
-                command.UserId,
-                command.DisplayName,
-                command.Bio,
-                timeProvider.GetUtcNow().UtcDateTime);
-        }
-        catch (ArgumentException ex)
-        {
-            throw new ValidationException(ex.Message);
-        }
+        var profile = OrganizerProfile.Create(
+            command.UserId,
+            command.DisplayName,
+            command.Bio,
+            timeProvider.GetUtcNow().UtcDateTime);
 
         organizerProfileRepository.Add(profile);
         await unitOfWork.SaveChangesAsync(cancellationToken);

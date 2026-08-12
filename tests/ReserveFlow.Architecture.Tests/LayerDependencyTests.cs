@@ -1,4 +1,5 @@
 using NetArchTest.Rules;
+using ReserveFlow.Api.Middleware;
 using ReserveFlow.Domain.Abstractions;
 using ReserveFlow.Domain.Shared;
 
@@ -28,6 +29,17 @@ public class LayerDependencyTests
             .HaveDependencyOnAny(
                 "ReserveFlow.Infrastructure",
                 "ReserveFlow.Api")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, FormatFailures(result));
+    }
+
+    [Fact]
+    public void Api_Should_NotHaveDependencyOnDomain()
+    {
+        var result = Types.InAssembly(typeof(ExceptionHandlingMiddleware).Assembly)
+            .ShouldNot()
+            .HaveDependencyOn("ReserveFlow.Domain")
             .GetResult();
 
         Assert.True(result.IsSuccessful, FormatFailures(result));

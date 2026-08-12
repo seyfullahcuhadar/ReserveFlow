@@ -1,4 +1,5 @@
 using ReserveFlow.Domain.Abstractions;
+using ReserveFlow.Domain.Exceptions;
 using ReserveFlow.Domain.Shared;
 
 namespace ReserveFlow.Domain.Catalog;
@@ -63,27 +64,27 @@ public sealed class Event : AggregateRoot
     {
         if (organizerId == Guid.Empty)
         {
-            throw new ArgumentException("OrganizerId is required.", nameof(organizerId));
+            throw new DomainValidationException("OrganizerId is required.");
         }
 
         if (venueId == Guid.Empty)
         {
-            throw new ArgumentException("VenueId is required.", nameof(venueId));
+            throw new DomainValidationException("VenueId is required.");
         }
 
         if (string.IsNullOrWhiteSpace(title))
         {
-            throw new ArgumentException("Title is required.", nameof(title));
+            throw new DomainValidationException("Title is required.");
         }
 
         if (string.IsNullOrWhiteSpace(description))
         {
-            throw new ArgumentException("Description is required.", nameof(description));
+            throw new DomainValidationException("Description is required.");
         }
 
         if (startAtUtc >= endAtUtc)
         {
-            throw new ArgumentException("StartAt must be earlier than EndAt.", nameof(startAtUtc));
+            throw new DomainValidationException("StartAt must be earlier than EndAt.");
         }
 
         var @event = new Event(
@@ -116,11 +117,33 @@ public sealed class Event : AggregateRoot
         return ticketType;
     }
 
+    public void Publish(DateTime publishedAtUtc)
+    {
+        if (Status != EventStatus.Draft)
+        {
+            throw new DomainConflictException("Only draft events can be published.");
+        }
+
+        if (!_ticketTypes.Any(t => t.IsActive))
+        {
+            throw new DomainValidationException("At least one active ticket type is required to publish.");
+        }
+
+        if (StartAtUtc <= publishedAtUtc)
+        {
+            throw new DomainValidationException("An event with a past date cannot be published.");
+        }
+
+        Status = EventStatus.Published;
+        PublishedAtUtc = publishedAtUtc;
+        RaiseDomainEvent(new EventPublishedDomainEvent(Id, OrganizerId, publishedAtUtc));
+    }
+
     private void EnsureEditable()
     {
         if (Status != EventStatus.Draft)
         {
-            throw new InvalidOperationException("Only draft events can be edited.");
+            throw new DomainConflictException("Only draft events can be edited.");
         }
     }
 }

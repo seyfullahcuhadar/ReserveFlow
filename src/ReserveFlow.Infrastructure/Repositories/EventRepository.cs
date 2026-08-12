@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using ReserveFlow.Domain.Catalog;
 using Event = ReserveFlow.Domain.Catalog.Event;
 
@@ -7,4 +8,11 @@ public sealed class EventRepository(ApplicationDbContext dbContext) : IEventRepo
 {
     public void Add(Event @event) =>
         dbContext.Events.Add(@event);
+
+    public Task<Event?> GetByIdAsync(Guid eventId, CancellationToken cancellationToken)
+    {
+        return dbContext.
+        Events.
+        FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken);
+    }
 }

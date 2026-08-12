@@ -141,7 +141,8 @@ Api  →  Infrastructure  →  Application  →  Domain
 ReserveFlow.Domain.Bookings
 ReserveFlow.Application.Bookings.CreateReservation
 ReserveFlow.Infrastructure.Repositories
-ReserveFlow.Api.Controllers
+ReserveFlow.Api.Controllers.Catalog
+ReserveFlow.Api.Controllers.Catalog.Dtos
 ```
 
 ## New Feature Checklist
@@ -149,6 +150,6 @@ ReserveFlow.Api.Controllers
 1. Create the `Domain/{Feature}/` folder and add entities and value objects
 2. Create the `Application/{Feature}/` folder and add command/query handlers
 3. When needed, create the relevant technical folder under `Infrastructure/` (e.g., `Repositories/`, `Data/`)
-4. Create the `Api/Controllers/` folder (if it does not yet exist) and add the endpoint
+4. Under `Api/Controllers/{Feature}/` add the controller; put Request/Response in `Dtos/`
 5. Add the new service registrations to the `DependencyInjection.cs` files
 6. Update the relevant NFR test evidence (`docs/NFR.md`)

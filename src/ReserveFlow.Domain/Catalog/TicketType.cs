@@ -1,4 +1,5 @@
 using ReserveFlow.Domain.Abstractions;
+using ReserveFlow.Domain.Exceptions;
 using ReserveFlow.Domain.Shared;
 
 namespace ReserveFlow.Domain.Catalog;
@@ -52,17 +53,17 @@ public sealed class TicketType : Entity
 
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new ArgumentException("Ticket type name is required.", nameof(name));
+            throw new DomainValidationException("Ticket type name is required.");
         }
 
         if (quota <= 0)
         {
-            throw new ArgumentException("Quota must be greater than zero.", nameof(quota));
+            throw new DomainValidationException("Quota must be greater than zero.");
         }
 
         if (salesStartAtUtc >= salesEndAtUtc)
         {
-            throw new ArgumentException("SalesStartAt must be earlier than SalesEndAt.", nameof(salesStartAtUtc));
+            throw new DomainValidationException("SalesStartAt must be earlier than SalesEndAt.");
         }
 
         return new TicketType(

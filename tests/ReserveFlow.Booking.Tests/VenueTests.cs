@@ -1,4 +1,5 @@
 using ReserveFlow.Domain.Catalog;
+using ReserveFlow.Domain.Exceptions;
 using ReserveFlow.Domain.Shared;
 
 namespace ReserveFlow.Booking.Tests;
@@ -31,7 +32,7 @@ public class VenueTests
     {
         var address = Address.Create("Main St 1", "Istanbul", "TR");
 
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<DomainValidationException>(() =>
             Venue.Create("Hall", address, 0, "Europe/Istanbul", DateTime.UtcNow));
     }
 }

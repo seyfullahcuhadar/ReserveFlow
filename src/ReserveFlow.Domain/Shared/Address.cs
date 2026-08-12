@@ -1,4 +1,5 @@
 using ReserveFlow.Domain.Abstractions;
+using ReserveFlow.Domain.Exceptions;
 
 namespace ReserveFlow.Domain.Shared;
 
@@ -32,17 +33,17 @@ public sealed class Address : ValueObject
     {
         if (string.IsNullOrWhiteSpace(street))
         {
-            throw new ArgumentException("Street is required.", nameof(street));
+            throw new DomainValidationException("Street is required.");
         }
 
         if (string.IsNullOrWhiteSpace(city))
         {
-            throw new ArgumentException("City is required.", nameof(city));
+            throw new DomainValidationException("City is required.");
         }
 
         if (string.IsNullOrWhiteSpace(country))
         {
-            throw new ArgumentException("Country is required.", nameof(country));
+            throw new DomainValidationException("Country is required.");
         }
 
         return new Address(

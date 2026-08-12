@@ -21,26 +21,18 @@ public sealed class CreateVenueCommandHandler(
             throw new ValidationException(string.Join(" ", validation.Errors.Select(e => e.ErrorMessage)));
         }
 
-        Venue venue;
-        try
-        {
-            var address = Address.Create(
-                command.Street,
-                command.City,
-                command.Country,
-                command.PostalCode);
+        var address = Address.Create(
+            command.Street,
+            command.City,
+            command.Country,
+            command.PostalCode);
 
-            venue = Venue.Create(
-                command.Name,
-                address,
-                command.Capacity,
-                command.TimeZone,
-                timeProvider.GetUtcNow().UtcDateTime);
-        }
-        catch (ArgumentException ex)
-        {
-            throw new ValidationException(ex.Message);
-        }
+        var venue = Venue.Create(
+            command.Name,
+            address,
+            command.Capacity,
+            command.TimeZone,
+            timeProvider.GetUtcNow().UtcDateTime);
 
         venueRepository.Add(venue);
         await unitOfWork.SaveChangesAsync(cancellationToken);

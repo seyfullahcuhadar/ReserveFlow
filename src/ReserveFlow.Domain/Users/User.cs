@@ -1,4 +1,5 @@
 using ReserveFlow.Domain.Abstractions;
+using ReserveFlow.Domain.Exceptions;
 using ReserveFlow.Domain.Shared;
 
 namespace ReserveFlow.Domain.Users;
@@ -41,7 +42,7 @@ public sealed class User : AggregateRoot
 
         if (string.IsNullOrWhiteSpace(passwordHash))
         {
-            throw new ArgumentException("Password hash is required.", nameof(passwordHash));
+            throw new DomainValidationException("Password hash is required.");
         }
 
         var user = new User(

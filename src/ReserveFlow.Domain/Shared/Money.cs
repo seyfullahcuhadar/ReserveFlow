@@ -1,4 +1,5 @@
 using ReserveFlow.Domain.Abstractions;
+using ReserveFlow.Domain.Exceptions;
 
 namespace ReserveFlow.Domain.Shared;
 
@@ -24,18 +25,18 @@ public sealed class Money : ValueObject
     {
         if (amount < 0)
         {
-            throw new ArgumentException("Amount cannot be negative.", nameof(amount));
+            throw new DomainValidationException("Amount cannot be negative.");
         }
 
         if (string.IsNullOrWhiteSpace(currency))
         {
-            throw new ArgumentException("Currency is required.", nameof(currency));
+            throw new DomainValidationException("Currency is required.");
         }
 
         var normalized = currency.Trim().ToUpperInvariant();
         if (normalized.Length is < 3 or > 3)
         {
-            throw new ArgumentException("Currency must be a 3-letter ISO code.", nameof(currency));
+            throw new DomainValidationException("Currency must be a 3-letter ISO code.");
         }
 
         return new Money(amount, normalized);
