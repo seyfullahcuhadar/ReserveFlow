@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using ReserveFlow.Api.Controllers.Catalog.Dtos;
+using ReserveFlow.Application.Catalog.CancelEvent;
 using ReserveFlow.Application.Catalog.CreateEvent;
 using ReserveFlow.Application.Catalog.PublishEvent;
 using ReserveFlow.Application.Messaging;
+using Wolverine;
 
 namespace ReserveFlow.Api.Controllers.Catalog;
 
@@ -55,4 +57,16 @@ public sealed class EventsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{eventId:guid}/cancel")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Cancel(
+        Guid eventId,
+        IMessageBus bus,
+        CancellationToken cancellationToken)
+    {
+        await bus.InvokeAsync(new CancelEventCommand(eventId), cancellationToken);
+        return NoContent();
+    }
 }

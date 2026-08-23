@@ -99,4 +99,128 @@ public class EventTests
                 now.AddDays(1),
                 now));
     }
+
+    [Fact]
+    public void Publish_ShouldPublishEvent()
+    {
+        var now = DateTime.UtcNow;
+
+        var @event = Event.CreateDraft(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Title",
+            "Description",
+            now.AddDays(7),
+            now.AddDays(7).AddHours(3),
+            now);
+
+        @event.AddTicketType(
+            "VIP",
+            Money.Create(100m),
+            50,
+            now,
+            now.AddDays(9),
+            now);
+
+        @event.Publish(now);
+        Assert.Equal(EventStatus.Published, @event.Status);
+        Assert.Equal(now, @event.PublishedAtUtc);
+        Assert.Contains(@event.GetDomainEvents(), e => e is EventPublishedDomainEvent);
+    }
+
+    [Fact]
+    public void Publish_ShouldRejectWhenNoActiveTicketType()
+    {
+        var now = new DateTime(2026, 8, 5, 12, 0, 0, DateTimeKind.Utc);
+        var @event = Event.CreateDraft(
+            Guid.NewGuid(), Guid.NewGuid(),
+            "Title", "Description",
+            now.AddDays(10), now.AddDays(10).AddHours(2), now);
+        Assert.Throws<DomainValidationException>(() => @event.Publish(now));
+    }
+
+    [Fact]
+    public void Publish_ShouldRejectWhenEventDateIsInThePast()
+    {
+        var now = new DateTime(2026, 8, 5, 12, 0, 0, DateTimeKind.Utc);
+        var @event = Event.CreateDraft(
+            Guid.NewGuid(), Guid.NewGuid(),
+            "Title", "Description",
+            now.AddHours(-2), // StartAt geçmiş
+            now.AddHours(-1),
+            now.AddDays(-1));
+    
+        @event.AddTicketType("VIP", Money.Create(100m), 50, now.AddDays(-1), now, now.AddDays(-1));
+        Assert.Throws<DomainValidationException>(() => @event.Publish(now));
+    }
+
+    [Fact]
+    public void Publish_ShouldRejectWhenEventIsNotDraft()
+    {
+        var now = new DateTime(2026, 8, 5, 12, 0, 0, DateTimeKind.Utc);
+        var @event = Event.CreateDraft(
+            Guid.NewGuid(), Guid.NewGuid(),
+            "Title", "Description",
+            now.AddDays(10), now.AddDays(10).AddHours(2), now);
+        @event.AddTicketType("VIP", Money.Create(100m), 50, now, now.AddDays(9), now);
+        @event.Publish(now);
+        Assert.Throws<DomainConflictException>(() => @event.Publish(now.AddMinutes(1)));
+    }
+
+    [Fact]
+    public void Cancel_ShouldCancelDraftEvent()
+    {
+        var now = new DateTime(2026, 8, 5, 12, 0, 0, DateTimeKind.Utc);
+        var @event = Event.CreateDraft(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Title",
+            "Description",
+            now.AddDays(10),
+            now.AddDays(10).AddHours(2),
+            now);
+
+        @event.Cancel(now);
+
+        Assert.Equal(EventStatus.Cancelled, @event.Status);
+        Assert.Contains(@event.GetDomainEvents(), e => e is EventCancelledDomainEvent);
+    }
+
+    [Fact]
+    public void Cancel_ShouldCancelPublishedEvent()
+    {
+        var now = new DateTime(2026, 8, 5, 12, 0, 0, DateTimeKind.Utc);
+        var @event = Event.CreateDraft(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Title",
+            "Description",
+            now.AddDays(10),
+            now.AddDays(10).AddHours(2),
+            now);
+        @event.AddTicketType("VIP", Money.Create(100m), 50, now, now.AddDays(9), now);
+        @event.Publish(now);
+
+        @event.Cancel(now.AddMinutes(1));
+
+        Assert.Equal(EventStatus.Cancelled, @event.Status);
+        Assert.Contains(@event.GetDomainEvents(), e => e is EventCancelledDomainEvent);
+    }
+
+    [Fact]
+    public void Cancel_ShouldRejectWhenEventIsAlreadyCancelled()
+    {
+        var now = new DateTime(2026, 8, 5, 12, 0, 0, DateTimeKind.Utc);
+        var @event = Event.CreateDraft(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Title",
+            "Description",
+            now.AddDays(10),
+            now.AddDays(10).AddHours(2),
+            now);
+        @event.Cancel(now);
+
+        Assert.Throws<DomainConflictException>(() => @event.Cancel(now.AddMinutes(1)));
+    }
 }

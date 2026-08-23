@@ -10,6 +10,8 @@ Kaynak: [PROJECT.md](PROJECT.md) · [USE_CASES.md](USE_CASES.md) · [NFR.md](NFR
 - [x] UC-CAT-01 Create Organizer Profile
 - [x] UC-CAT-06 Create Venue
 - [x] UC-CAT-02 Create Event (Draft) + Add TicketType
+- [x] UC-CAT-03 Publish Event
+- [x] UC-CAT-05 Cancel Event
 - [x] NFR-M01 Layered architecture (NetArchTest)
 - [x] Health endpoint
 
@@ -21,9 +23,9 @@ Kaynak: [PROJECT.md](PROJECT.md) · [USE_CASES.md](USE_CASES.md) · [NFR.md](NFR
 
 - [x] UC-CAT-06 Create Venue
 - [x] UC-CAT-02 Create Event (Draft) + Add TicketType
-- [ ] UC-CAT-03 Publish Event
+- [x] UC-CAT-03 Publish Event
 - [ ] UC-CAT-04 List Events (pagination; cache F3'te)
-- [ ] UC-CAT-05 Cancel Event
+- [x] UC-CAT-05 Cancel Event
 
 ### Scheduling
 
@@ -119,6 +121,6 @@ Kaynak: [PROJECT.md](PROJECT.md) · [USE_CASES.md](USE_CASES.md) · [NFR.md](NFR
 
 ## Sıradaki 3 madde
 
-1. UC-CAT-03 Publish Event
-2. UC-CAT-05 Cancel Event (veya List Events)
-3. UC-CORE-01 Event Ticket Sale happy path iskeleti
+1. UC-CAT-04 List Events (pagination; cache F3'te)
+2. UC-CORE-01 Event Ticket Sale happy path iskeleti
+3. UC-SCH-01 Provider Profile + Weekly Availability

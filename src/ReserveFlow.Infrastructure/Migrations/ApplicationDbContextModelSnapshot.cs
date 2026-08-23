@@ -239,7 +239,7 @@ namespace ReserveFlow.Infrastructure.Migrations
 
                                     b2.HasKey("TicketTypeId");
 
-                                    b2.ToTable("ticket_types");
+                                    b2.ToTable("ticket_types", (string)null);
 
                                     b2.WithOwner()
                                         .HasForeignKey("TicketTypeId");
@@ -284,7 +284,7 @@ namespace ReserveFlow.Infrastructure.Migrations
 
                             b1.HasKey("VenueId");
 
-                            b1.ToTable("venues");
+                            b1.ToTable("venues", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("VenueId");
@@ -312,7 +312,7 @@ namespace ReserveFlow.Infrastructure.Migrations
                             b1.HasIndex("Value")
                                 .IsUnique();
 
-                            b1.ToTable("users");
+                            b1.ToTable("users", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("UserId");

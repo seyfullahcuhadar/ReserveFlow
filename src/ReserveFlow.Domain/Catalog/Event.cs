@@ -137,6 +137,17 @@ public sealed class Event : AggregateRoot
         RaiseDomainEvent(new EventPublishedDomainEvent(Id, OrganizerId, publishedAtUtc));
     }
 
+    public void Cancel(DateTime cancelledAtUtc)
+    {
+        if (Status is EventStatus.Cancelled or EventStatus.Completed)
+        {
+            throw new DomainConflictException("Only draft or published events can be cancelled.");
+        }
+
+        Status = EventStatus.Cancelled;
+        RaiseDomainEvent(new EventCancelledDomainEvent(Id, OrganizerId, cancelledAtUtc));
+    }
+
     private void EnsureEditable()
     {
         if (Status != EventStatus.Draft)
