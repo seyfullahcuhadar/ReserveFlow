@@ -1,5 +1,4 @@
 using ReserveFlow.Domain.Catalog;
-using ReserveFlow.Domain.Exceptions;
 using ReserveFlow.Domain.Shared;
 using Event = ReserveFlow.Domain.Catalog.Event;
 
@@ -14,7 +13,7 @@ public class EventTests
         var startAt = createdAt.AddDays(10);
         var endAt = startAt.AddHours(2);
 
-        var @event = Event.CreateDraft(
+        var result = Event.CreateDraft(
             Guid.NewGuid(),
             Guid.NewGuid(),
             "  Tech Conference  ",
@@ -23,6 +22,8 @@ public class EventTests
             endAt,
             createdAt);
 
+        Assert.True(result.IsSuccess);
+        var @event = result.Value;
         Assert.Equal(EventStatus.Draft, @event.Status);
         Assert.Equal("Tech Conference", @event.Title);
         Assert.Equal(createdAt, @event.CreatedAtUtc);
@@ -36,38 +37,35 @@ public class EventTests
     {
         var now = DateTime.UtcNow;
 
-        Assert.Throws<DomainValidationException>(() =>
-            Event.CreateDraft(
-                Guid.NewGuid(),
-                Guid.NewGuid(),
-                "Title",
-                "Description",
-                now.AddHours(2),
-                now,
-                now));
+        var result = Event.CreateDraft(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Title",
+            "Description",
+            now.AddHours(2),
+            now,
+            now);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(CatalogError.StartMustBeEarlierThanEnd, result.Error);
     }
 
     [Fact]
     public void AddTicketType_ShouldAddActiveTicketType()
     {
         var now = DateTime.UtcNow;
-        var @event = Event.CreateDraft(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            "Title",
-            "Description",
-            now.AddDays(7),
-            now.AddDays(7).AddHours(3),
-            now);
+        var @event = DraftEvent(now);
 
-        var ticketType = @event.AddTicketType(
+        var result = @event.AddTicketType(
             "VIP",
-            Money.Create(250m, "try"),
+            Money.Create(250m, "try").Value,
             100,
             now,
             now.AddDays(6),
             now);
 
+        Assert.True(result.IsSuccess);
+        var ticketType = result.Value;
         Assert.Single(@event.TicketTypes);
         Assert.Equal("VIP", ticketType.Name);
         Assert.Equal(250m, ticketType.Price.Amount);
@@ -81,48 +79,37 @@ public class EventTests
     public void AddTicketType_ShouldRejectInvalidSalesWindow()
     {
         var now = DateTime.UtcNow;
-        var @event = Event.CreateDraft(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            "Title",
-            "Description",
-            now.AddDays(7),
-            now.AddDays(7).AddHours(3),
+        var @event = DraftEvent(now);
+
+        var result = @event.AddTicketType(
+            "VIP",
+            Money.Create(100m).Value,
+            50,
+            now.AddDays(2),
+            now.AddDays(1),
             now);
 
-        Assert.Throws<DomainValidationException>(() =>
-            @event.AddTicketType(
-                "VIP",
-                Money.Create(100m),
-                50,
-                now.AddDays(2),
-                now.AddDays(1),
-                now));
+        Assert.True(result.IsFailure);
+        Assert.Equal(CatalogError.SalesWindowInvalid, result.Error);
     }
 
     [Fact]
     public void Publish_ShouldPublishEvent()
     {
         var now = DateTime.UtcNow;
+        var @event = DraftEvent(now, now.AddDays(7), now.AddDays(7).AddHours(3));
 
-        var @event = Event.CreateDraft(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            "Title",
-            "Description",
-            now.AddDays(7),
-            now.AddDays(7).AddHours(3),
-            now);
-
-        @event.AddTicketType(
+        Assert.True(@event.AddTicketType(
             "VIP",
-            Money.Create(100m),
+            Money.Create(100m).Value,
             50,
             now,
             now.AddDays(9),
-            now);
+            now).IsSuccess);
 
-        @event.Publish(now);
+        var result = @event.Publish(now);
+
+        Assert.True(result.IsSuccess);
         Assert.Equal(EventStatus.Published, @event.Status);
         Assert.Equal(now, @event.PublishedAtUtc);
         Assert.Contains(@event.GetDomainEvents(), e => e is EventPublishedDomainEvent);
@@ -132,56 +119,57 @@ public class EventTests
     public void Publish_ShouldRejectWhenNoActiveTicketType()
     {
         var now = new DateTime(2026, 8, 5, 12, 0, 0, DateTimeKind.Utc);
-        var @event = Event.CreateDraft(
-            Guid.NewGuid(), Guid.NewGuid(),
-            "Title", "Description",
-            now.AddDays(10), now.AddDays(10).AddHours(2), now);
-        Assert.Throws<DomainValidationException>(() => @event.Publish(now));
+        var @event = DraftEvent(now, now.AddDays(10), now.AddDays(10).AddHours(2));
+
+        var result = @event.Publish(now);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(CatalogError.ActiveTicketTypeRequiredToPublish, result.Error);
     }
 
     [Fact]
     public void Publish_ShouldRejectWhenEventDateIsInThePast()
     {
         var now = new DateTime(2026, 8, 5, 12, 0, 0, DateTimeKind.Utc);
-        var @event = Event.CreateDraft(
-            Guid.NewGuid(), Guid.NewGuid(),
-            "Title", "Description",
-            now.AddHours(-2), // StartAt geçmiş
-            now.AddHours(-1),
-            now.AddDays(-1));
-    
-        @event.AddTicketType("VIP", Money.Create(100m), 50, now.AddDays(-1), now, now.AddDays(-1));
-        Assert.Throws<DomainValidationException>(() => @event.Publish(now));
+        var @event = DraftEvent(now.AddDays(-1), now.AddHours(-2), now.AddHours(-1));
+
+        Assert.True(@event.AddTicketType(
+            "VIP",
+            Money.Create(100m).Value,
+            50,
+            now.AddDays(-1),
+            now,
+            now.AddDays(-1)).IsSuccess);
+
+        var result = @event.Publish(now);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(CatalogError.CannotPublishPastEvent, result.Error);
     }
 
     [Fact]
     public void Publish_ShouldRejectWhenEventIsNotDraft()
     {
         var now = new DateTime(2026, 8, 5, 12, 0, 0, DateTimeKind.Utc);
-        var @event = Event.CreateDraft(
-            Guid.NewGuid(), Guid.NewGuid(),
-            "Title", "Description",
-            now.AddDays(10), now.AddDays(10).AddHours(2), now);
-        @event.AddTicketType("VIP", Money.Create(100m), 50, now, now.AddDays(9), now);
-        @event.Publish(now);
-        Assert.Throws<DomainConflictException>(() => @event.Publish(now.AddMinutes(1)));
+        var @event = DraftEvent(now, now.AddDays(10), now.AddDays(10).AddHours(2));
+        Assert.True(@event.AddTicketType("VIP", Money.Create(100m).Value, 50, now, now.AddDays(9), now).IsSuccess);
+        Assert.True(@event.Publish(now).IsSuccess);
+
+        var result = @event.Publish(now.AddMinutes(1));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(CatalogError.OnlyDraftEventsCanBePublished, result.Error);
     }
 
     [Fact]
     public void Cancel_ShouldCancelDraftEvent()
     {
         var now = new DateTime(2026, 8, 5, 12, 0, 0, DateTimeKind.Utc);
-        var @event = Event.CreateDraft(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            "Title",
-            "Description",
-            now.AddDays(10),
-            now.AddDays(10).AddHours(2),
-            now);
+        var @event = DraftEvent(now, now.AddDays(10), now.AddDays(10).AddHours(2));
 
-        @event.Cancel(now);
+        var result = @event.Cancel(now);
 
+        Assert.True(result.IsSuccess);
         Assert.Equal(EventStatus.Cancelled, @event.Status);
         Assert.Contains(@event.GetDomainEvents(), e => e is EventCancelledDomainEvent);
     }
@@ -190,19 +178,13 @@ public class EventTests
     public void Cancel_ShouldCancelPublishedEvent()
     {
         var now = new DateTime(2026, 8, 5, 12, 0, 0, DateTimeKind.Utc);
-        var @event = Event.CreateDraft(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            "Title",
-            "Description",
-            now.AddDays(10),
-            now.AddDays(10).AddHours(2),
-            now);
-        @event.AddTicketType("VIP", Money.Create(100m), 50, now, now.AddDays(9), now);
-        @event.Publish(now);
+        var @event = DraftEvent(now, now.AddDays(10), now.AddDays(10).AddHours(2));
+        Assert.True(@event.AddTicketType("VIP", Money.Create(100m).Value, 50, now, now.AddDays(9), now).IsSuccess);
+        Assert.True(@event.Publish(now).IsSuccess);
 
-        @event.Cancel(now.AddMinutes(1));
+        var result = @event.Cancel(now.AddMinutes(1));
 
+        Assert.True(result.IsSuccess);
         Assert.Equal(EventStatus.Cancelled, @event.Status);
         Assert.Contains(@event.GetDomainEvents(), e => e is EventCancelledDomainEvent);
     }
@@ -211,16 +193,25 @@ public class EventTests
     public void Cancel_ShouldRejectWhenEventIsAlreadyCancelled()
     {
         var now = new DateTime(2026, 8, 5, 12, 0, 0, DateTimeKind.Utc);
-        var @event = Event.CreateDraft(
+        var @event = DraftEvent(now, now.AddDays(10), now.AddDays(10).AddHours(2));
+        Assert.True(@event.Cancel(now).IsSuccess);
+
+        var result = @event.Cancel(now.AddMinutes(1));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(CatalogError.OnlyDraftOrPublishedCanBeCancelled, result.Error);
+    }
+
+    private static Event DraftEvent(DateTime createdAt) =>
+        DraftEvent(createdAt, createdAt.AddDays(7), createdAt.AddDays(7).AddHours(3));
+
+    private static Event DraftEvent(DateTime createdAt, DateTime startAt, DateTime endAt) =>
+        Event.CreateDraft(
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Title",
             "Description",
-            now.AddDays(10),
-            now.AddDays(10).AddHours(2),
-            now);
-        @event.Cancel(now);
-
-        Assert.Throws<DomainConflictException>(() => @event.Cancel(now.AddMinutes(1)));
-    }
+            startAt,
+            endAt,
+            createdAt).Value;
 }

@@ -35,11 +35,15 @@ public class LayerDependencyTests
     }
 
     [Fact]
-    public void Api_Should_NotHaveDependencyOnDomain()
+    public void Api_Should_NotHaveDependencyOnDomainFeatures()
     {
         var result = Types.InAssembly(typeof(ExceptionHandlingMiddleware).Assembly)
             .ShouldNot()
-            .HaveDependencyOn("ReserveFlow.Domain")
+            .HaveDependencyOnAny(
+                "ReserveFlow.Domain.Users",
+                "ReserveFlow.Domain.Catalog",
+                "ReserveFlow.Domain.Shared",
+                "ReserveFlow.Domain.Exceptions")
             .GetResult();
 
         Assert.True(result.IsSuccessful, FormatFailures(result));

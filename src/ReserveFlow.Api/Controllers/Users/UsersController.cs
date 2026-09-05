@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using ReserveFlow.Api.Controllers.Users.Dtos;
+using ReserveFlow.Api.Extensions;
 using ReserveFlow.Application.Messaging;
 using ReserveFlow.Application.Users.LoginUser;
 using ReserveFlow.Application.Users.RegisterUser;
-using Wolverine;
 
 namespace ReserveFlow.Api.Controllers.Users;
 
@@ -11,26 +11,25 @@ namespace ReserveFlow.Api.Controllers.Users;
 [Route("api/v1/users")]
 public sealed class UsersController : ControllerBase
 {
-    private readonly IMessageBus _messageBus;
-
-    public UsersController(IMessageBus messageBus)
-    {
-        _messageBus = messageBus;
-    }
     [HttpPost("register")]
     [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<RegisterUserResponse>> Register(
         [FromBody] RegisterUserRequest request,
+        [FromServices] ICommandHandler<RegisterUserCommand, Guid> handler,
         CancellationToken cancellationToken)
     {
         var command = new RegisterUserCommand(request.Email, request.Password);
-        var userId =await  _messageBus.InvokeAsync<Guid>(command);
+        var result = await handler.HandleAsync(command, cancellationToken);
+        if (result.IsFailure)
+        {
+            return result.ToProblemDetails();
+        }
 
         return CreatedAtAction(
             nameof(Register),
-            new RegisterUserResponse(userId));
+            new RegisterUserResponse(result.Value));
     }
 
     [HttpPost("login")]
@@ -43,8 +42,12 @@ public sealed class UsersController : ControllerBase
         CancellationToken cancellationToken)
     {
         var command = new LoginUserCommand(request.Email, request.Password);
-        var token = await loginUserCommandHandler.HandleAsync(command, cancellationToken);
+        var result = await loginUserCommandHandler.HandleAsync(command, cancellationToken);
+        if (result.IsFailure)
+        {
+            return result.ToProblemDetails();
+        }
 
-        return Ok(new LoginUserResponse(token));
+        return Ok(new LoginUserResponse(result.Value));
     }
 }

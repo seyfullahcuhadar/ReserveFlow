@@ -1,5 +1,4 @@
 using ReserveFlow.Domain.Abstractions;
-using ReserveFlow.Domain.Exceptions;
 
 namespace ReserveFlow.Domain.Shared;
 
@@ -21,22 +20,22 @@ public sealed class Money : ValueObject
 
     public string Currency { get; private set; }
 
-    public static Money Create(decimal amount, string currency = "TRY")
+    public static Result<Money> Create(decimal amount, string currency = "TRY")
     {
         if (amount < 0)
         {
-            throw new DomainValidationException("Amount cannot be negative.");
+            return Result.Failure<Money>(MoneyError.AmountCannotBeNegative);
         }
 
         if (string.IsNullOrWhiteSpace(currency))
         {
-            throw new DomainValidationException("Currency is required.");
+            return Result.Failure<Money>(MoneyError.CurrencyRequired);
         }
 
         var normalized = currency.Trim().ToUpperInvariant();
         if (normalized.Length is < 3 or > 3)
         {
-            throw new DomainValidationException("Currency must be a 3-letter ISO code.");
+            return Result.Failure<Money>(MoneyError.CurrencyMustBeIsoCode);
         }
 
         return new Money(amount, normalized);

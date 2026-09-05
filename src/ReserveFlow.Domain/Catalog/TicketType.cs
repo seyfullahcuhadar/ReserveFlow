@@ -1,5 +1,4 @@
 using ReserveFlow.Domain.Abstractions;
-using ReserveFlow.Domain.Exceptions;
 using ReserveFlow.Domain.Shared;
 
 namespace ReserveFlow.Domain.Catalog;
@@ -43,7 +42,7 @@ public sealed class TicketType : Entity
 
     public bool IsActive { get; private set; }
 
-    internal static TicketType Create(
+    internal static Result<TicketType> Create(
         string name,
         Money price,
         int quota,
@@ -55,17 +54,17 @@ public sealed class TicketType : Entity
 
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new DomainValidationException("Ticket type name is required.");
+            return Result.Failure<TicketType>(CatalogError.TicketTypeNameRequired);
         }
 
         if (quota <= 0)
         {
-            throw new DomainValidationException("Quota must be greater than zero.");
+            return Result.Failure<TicketType>(CatalogError.QuotaMustBePositive);
         }
 
         if (salesStartAtUtc >= salesEndAtUtc)
         {
-            throw new DomainValidationException("SalesStartAt must be earlier than SalesEndAt.");
+            return Result.Failure<TicketType>(CatalogError.SalesWindowInvalid);
         }
 
         return new TicketType(

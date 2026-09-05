@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using ReserveFlow.Application.Exceptions;
 
 namespace ReserveFlow.Api.Middleware;
 
-public sealed class ExceptionHandlingMiddleware(RequestDelegate next)
+public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
 {
     public async Task InvokeAsync(HttpContext context)
     {
@@ -11,30 +10,22 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next)
         {
             await next(context);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (!context.RequestAborted.IsCancellationRequested)
         {
-            await WriteProblemAsync(context, exception);
+            logger.LogError(exception, "Unhandled exception while processing the request.");
+            await WriteProblemAsync(context);
         }
     }
 
-    private static async Task WriteProblemAsync(HttpContext context, Exception exception)
+    private static async Task WriteProblemAsync(HttpContext context)
     {
-        var (statusCode, title) = exception switch
-        {
-            ValidationException => (StatusCodes.Status400BadRequest, "Validation failed"),
-            ConflictException => (StatusCodes.Status409Conflict, "Conflict"),
-            UnauthorizedException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
-            _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred")
-        };
+        const int statusCode = StatusCodes.Status500InternalServerError;
 
         context.Response.StatusCode = statusCode;
         await context.Response.WriteAsJsonAsync(new ProblemDetails
         {
             Status = statusCode,
-            Title = title,
-            Detail = statusCode is StatusCodes.Status500InternalServerError
-                ? null
-                : exception.Message
+            Title = "An unexpected error occurred"
         });
     }
 }

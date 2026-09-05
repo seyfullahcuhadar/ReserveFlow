@@ -1,10 +1,9 @@
 using FluentValidation;
-using ReserveFlow.Application.Exceptions;
 using ReserveFlow.Application.Messaging;
+using ReserveFlow.Application.Validation;
 using ReserveFlow.Domain.Abstractions;
 using ReserveFlow.Domain.Catalog;
 using ReserveFlow.Domain.Users;
-using ValidationException = ReserveFlow.Application.Exceptions.ValidationException;
 
 namespace ReserveFlow.Application.Catalog.CreateOrganizerProfile;
 
@@ -15,22 +14,22 @@ public sealed class CreateOrganizerProfileCommandHandler(
     TimeProvider timeProvider,
     IUnitOfWork unitOfWork) : ICommandHandler<CreateOrganizerProfileCommand, Guid>
 {
-    public async Task<Guid> HandleAsync(CreateOrganizerProfileCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> HandleAsync(CreateOrganizerProfileCommand command, CancellationToken cancellationToken)
     {
         var validation = await validator.ValidateAsync(command, cancellationToken);
         if (!validation.IsValid)
         {
-            throw new ValidationException(string.Join(" ", validation.Errors.Select(e => e.ErrorMessage)));
+            return Result.Failure<Guid>(validation.ToError());
         }
 
         if (!await userRepository.ExistsByIdAsync(command.UserId, cancellationToken))
         {
-            throw new ValidationException("User was not found.");
+            return Result.Failure<Guid>(CatalogError.UserNotFound);
         }
 
         if (await organizerProfileRepository.ExistsByUserIdAsync(command.UserId, cancellationToken))
         {
-            throw new ConflictException("Organizer profile already exists for this user.");
+            return Result.Failure<Guid>(CatalogError.OrganizerProfileAlreadyExists);
         }
 
         var profile = OrganizerProfile.Create(

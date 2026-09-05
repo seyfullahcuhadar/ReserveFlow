@@ -1,7 +1,9 @@
-﻿namespace ReserveFlow.Application.Messaging;
+﻿using ReserveFlow.Domain.Abstractions;
 
-public interface IQueryHandler<in TQuery, TResponse> 
+namespace ReserveFlow.Application.Messaging;
+
+public interface IQueryHandler<in TQuery, TResponse>
     where TQuery : IQuery<TResponse>
 {
-    Task<TResponse> HandleAsync(TQuery query, CancellationToken cancellationToken);
+    Task<Result<TResponse>> Handle(TQuery query, CancellationToken cancellationToken);
 }

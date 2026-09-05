@@ -1,5 +1,4 @@
 using ReserveFlow.Domain.Abstractions;
-using ReserveFlow.Domain.Exceptions;
 using ReserveFlow.Domain.Shared;
 
 namespace ReserveFlow.Domain.Catalog;
@@ -33,7 +32,7 @@ public sealed class Venue : AggregateRoot
 
     public string TimeZone { get; private set; } = null!;
 
-    public static Venue Create(
+    public static Result<Venue> Create(
         string name,
         Address address,
         int capacity,
@@ -44,17 +43,17 @@ public sealed class Venue : AggregateRoot
 
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new DomainValidationException("Venue name is required.");
+            return Result.Failure<Venue>(CatalogError.VenueNameRequired);
         }
 
         if (capacity <= 0)
         {
-            throw new DomainValidationException("Venue capacity must be greater than zero.");
+            return Result.Failure<Venue>(CatalogError.VenueCapacityMustBePositive);
         }
 
         if (string.IsNullOrWhiteSpace(timeZone))
         {
-            throw new DomainValidationException("Time zone is required.");
+            return Result.Failure<Venue>(CatalogError.TimeZoneRequired);
         }
 
         var venue = new Venue(

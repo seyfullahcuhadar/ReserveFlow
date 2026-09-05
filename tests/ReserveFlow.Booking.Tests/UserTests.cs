@@ -1,4 +1,3 @@
-using ReserveFlow.Domain.Exceptions;
 using ReserveFlow.Domain.Shared;
 using ReserveFlow.Domain.Users;
 
@@ -9,9 +8,10 @@ public class UserTests
     [Fact]
     public void Email_Create_ShouldNormalizeAndValidate()
     {
-        var email = Email.Create("  Admin@Example.COM ");
+        var result = Email.Create("  Admin@Example.COM ");
 
-        Assert.Equal("admin@example.com", email.Value);
+        Assert.True(result.IsSuccess);
+        Assert.Equal("admin@example.com", result.Value.Value);
     }
 
     [Theory]
@@ -20,17 +20,24 @@ public class UserTests
     [InlineData("@missing-local.com")]
     public void Email_Create_ShouldRejectInvalidValues(string value)
     {
-        Assert.Throws<DomainValidationException>(() => Email.Create(value));
+        var result = Email.Create(value);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(
+            string.IsNullOrWhiteSpace(value) ? EmailError.Required : EmailError.InvalidFormat,
+            result.Error);
     }
 
     [Fact]
     public void User_Register_ShouldCreateActiveCustomerWithHash()
     {
-        var email = Email.Create("customer@example.com");
+        var email = Email.Create("customer@example.com").Value;
         var createdAt = new DateTime(2026, 7, 12, 12, 0, 0, DateTimeKind.Utc);
 
-        var user = User.Register(email, "hashed-password", createdAt);
+        var result = User.Register(email, "hashed-password", createdAt);
 
+        Assert.True(result.IsSuccess);
+        var user = result.Value;
         Assert.Equal(UserStatus.Active, user.Status);
         Assert.Equal("hashed-password", user.PasswordHash);
         Assert.Equal(createdAt, user.CreatedAtUtc);
@@ -42,9 +49,11 @@ public class UserTests
     [Fact]
     public void User_Register_ShouldRejectMissingPasswordHash()
     {
-        var email = Email.Create("customer@example.com");
+        var email = Email.Create("customer@example.com").Value;
 
-        Assert.Throws<DomainValidationException>(() =>
-            User.Register(email, " ", DateTime.UtcNow));
+        var result = User.Register(email, " ", DateTime.UtcNow);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(UserError.PasswordHashRequired, result.Error);
     }
 }

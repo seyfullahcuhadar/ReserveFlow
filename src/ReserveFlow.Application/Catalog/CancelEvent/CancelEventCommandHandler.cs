@@ -1,10 +1,8 @@
 using FluentValidation;
-using ReserveFlow.Application.Exceptions;
 using ReserveFlow.Application.Messaging;
+using ReserveFlow.Application.Validation;
 using ReserveFlow.Domain.Abstractions;
 using ReserveFlow.Domain.Catalog;
-using ReserveFlow.Domain.Exceptions;
-using ValidationException = ReserveFlow.Application.Exceptions.ValidationException;
 
 namespace ReserveFlow.Application.Catalog.CancelEvent;
 
@@ -14,31 +12,27 @@ public sealed class CancelEventCommandHandler(
     TimeProvider timeProvider,
     IUnitOfWork unitOfWork) : ICommandHandler<CancelEventCommand>
 {
-    public async Task HandleAsync(CancelEventCommand command, CancellationToken cancellationToken)
+    public async Task<Result> HandleAsync(CancelEventCommand command, CancellationToken cancellationToken)
     {
         var validation = await validator.ValidateAsync(command, cancellationToken);
         if (!validation.IsValid)
         {
-            throw new ValidationException(string.Join(" ", validation.Errors.Select(e => e.ErrorMessage)));
+            return Result.Failure(validation.ToError());
         }
 
-        var @event = await eventRepository.GetByIdAsync(command.EventId, cancellationToken)
-            ?? throw new ValidationException("Event was not found.");
+        var @event = await eventRepository.GetByIdAsync(command.EventId, cancellationToken);
+        if (@event is null)
+        {
+            return Result.Failure(CatalogError.EventNotFound);
+        }
 
-        // Wolverine InvokeAsync decorator'ı atladığı için domain → application mapping burada.
-        // Tüm handler'lar Wolverine'e geçince middleware'e taşınacak.
-        try
+        var cancelResult = @event.Cancel(timeProvider.GetUtcNow().UtcDateTime);
+        if (cancelResult.IsFailure)
         {
-            @event.Cancel(timeProvider.GetUtcNow().UtcDateTime);
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            return cancelResult;
         }
-        catch (DomainValidationException ex)
-        {
-            throw new ValidationException(ex.Message);
-        }
-        catch (DomainConflictException ex)
-        {
-            throw new ConflictException(ex.Message);
-        }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Success();
     }
 }

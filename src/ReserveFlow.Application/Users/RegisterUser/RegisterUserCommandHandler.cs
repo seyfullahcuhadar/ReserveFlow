@@ -1,12 +1,11 @@
 using FluentValidation;
 using ReserveFlow.Application.Abstractions.Authentication;
 using ReserveFlow.Application.Diagnostics;
-using ReserveFlow.Application.Exceptions;
 using ReserveFlow.Application.Messaging;
+using ReserveFlow.Application.Validation;
 using ReserveFlow.Domain.Abstractions;
 using ReserveFlow.Domain.Shared;
 using ReserveFlow.Domain.Users;
-using ValidationException = ReserveFlow.Application.Exceptions.ValidationException;
 
 namespace ReserveFlow.Application.Users.RegisterUser;
 
@@ -32,25 +31,37 @@ public class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, G
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Guid> HandleAsync(RegisterUserCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> HandleAsync(RegisterUserCommand command, CancellationToken cancellationToken)
     {
         using var activity = ApplicationDiagnostics.ActivitySource.StartActivity("RegisterUser");
 
         var validation = await _validator.ValidateAsync(command, cancellationToken);
         if (!validation.IsValid)
         {
-            throw new ValidationException(string.Join(" ", validation.Errors.Select(e => e.ErrorMessage)));
+            return Result.Failure<Guid>(validation.ToError());
         }
 
-        var email = Email.Create(command.Email);
+        var emailResult = Email.Create(command.Email);
+        if (emailResult.IsFailure)
+        {
+            return Result.Failure<Guid>(emailResult.Error);
+        }
+
+        var email = emailResult.Value;
 
         if (await _userRepository.ExistsByEmailAsync(email, cancellationToken))
         {
-            throw new ConflictException("Email is already registered.");
+            return Result.Failure<Guid>(UserError.EmailAlreadyRegistered);
         }
 
         var passwordHash = _passwordHasher.Hash(command.Password);
-        var user = User.Register(email, passwordHash, _timeProvider.GetUtcNow().UtcDateTime);
+        var userResult = User.Register(email, passwordHash, _timeProvider.GetUtcNow().UtcDateTime);
+        if (userResult.IsFailure)
+        {
+            return Result.Failure<Guid>(userResult.Error);
+        }
+
+        var user = userResult.Value;
 
         _userRepository.Add(user);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

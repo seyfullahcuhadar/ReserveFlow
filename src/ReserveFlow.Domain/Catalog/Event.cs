@@ -1,5 +1,4 @@
 using ReserveFlow.Domain.Abstractions;
-using ReserveFlow.Domain.Exceptions;
 using ReserveFlow.Domain.Shared;
 
 namespace ReserveFlow.Domain.Catalog;
@@ -50,7 +49,7 @@ public sealed class Event : AggregateRoot
 
     public IReadOnlyList<TicketType> TicketTypes => _ticketTypes;
 
-    public static Event CreateDraft(
+    public static Result<Event> CreateDraft(
         Guid organizerId,
         Guid venueId,
         string title,
@@ -61,27 +60,27 @@ public sealed class Event : AggregateRoot
     {
         if (organizerId == Guid.Empty)
         {
-            throw new DomainValidationException("OrganizerId is required.");
+            return Result.Failure<Event>(CatalogError.OrganizerIdRequired);
         }
 
         if (venueId == Guid.Empty)
         {
-            throw new DomainValidationException("VenueId is required.");
+            return Result.Failure<Event>(CatalogError.VenueIdRequired);
         }
 
         if (string.IsNullOrWhiteSpace(title))
         {
-            throw new DomainValidationException("Title is required.");
+            return Result.Failure<Event>(CatalogError.TitleRequired);
         }
 
         if (string.IsNullOrWhiteSpace(description))
         {
-            throw new DomainValidationException("Description is required.");
+            return Result.Failure<Event>(CatalogError.DescriptionRequired);
         }
 
         if (startAtUtc >= endAtUtc)
         {
-            throw new DomainValidationException("StartAt must be earlier than EndAt.");
+            return Result.Failure<Event>(CatalogError.StartMustBeEarlierThanEnd);
         }
 
         var @event = new Event(
@@ -100,7 +99,7 @@ public sealed class Event : AggregateRoot
         return @event;
     }
 
-    public TicketType AddTicketType(
+    public Result<TicketType> AddTicketType(
         string name,
         Money price,
         int quota,
@@ -108,51 +107,65 @@ public sealed class Event : AggregateRoot
         DateTime salesEndAtUtc,
         DateTime createdAtUtc)
     {
-        EnsureEditable();
+        var editable = EnsureEditable();
+        if (editable.IsFailure)
+        {
+            return Result.Failure<TicketType>(editable.Error);
+        }
 
-        var ticketType = TicketType.Create(name, price, quota, salesStartAtUtc, salesEndAtUtc, createdAtUtc);
+        var ticketTypeResult = TicketType.Create(name, price, quota, salesStartAtUtc, salesEndAtUtc, createdAtUtc);
+        if (ticketTypeResult.IsFailure)
+        {
+            return Result.Failure<TicketType>(ticketTypeResult.Error);
+        }
+
+        var ticketType = ticketTypeResult.Value;
         _ticketTypes.Add(ticketType);
         return ticketType;
     }
 
-    public void Publish(DateTime publishedAtUtc)
+    public Result Publish(DateTime publishedAtUtc)
     {
         if (Status != EventStatus.Draft)
         {
-            throw new DomainConflictException("Only draft events can be published.");
+            return Result.Failure(CatalogError.OnlyDraftEventsCanBePublished);
         }
 
         if (!_ticketTypes.Any(t => t.IsActive))
         {
-            throw new DomainValidationException("At least one active ticket type is required to publish.");
+            return Result.Failure(CatalogError.ActiveTicketTypeRequiredToPublish);
         }
 
         if (StartAtUtc <= publishedAtUtc)
         {
-            throw new DomainValidationException("An event with a past date cannot be published.");
+            return Result.Failure(CatalogError.CannotPublishPastEvent);
         }
 
         Status = EventStatus.Published;
         PublishedAtUtc = publishedAtUtc;
         RaiseDomainEvent(new EventPublishedDomainEvent(Id, OrganizerId, publishedAtUtc));
+        return Result.Success();
     }
 
-    public void Cancel(DateTime cancelledAtUtc)
+    public Result Cancel(DateTime cancelledAtUtc)
     {
         if (Status is EventStatus.Cancelled or EventStatus.Completed)
         {
-            throw new DomainConflictException("Only draft or published events can be cancelled.");
+            return Result.Failure(CatalogError.OnlyDraftOrPublishedCanBeCancelled);
         }
 
         Status = EventStatus.Cancelled;
         RaiseDomainEvent(new EventCancelledDomainEvent(Id, OrganizerId, cancelledAtUtc));
+        return Result.Success();
     }
 
-    private void EnsureEditable()
+    private Result EnsureEditable()
     {
         if (Status != EventStatus.Draft)
         {
-            throw new DomainConflictException("Only draft events can be edited.");
+            return Result.Failure(CatalogError.OnlyDraftEventsCanBeEdited);
         }
+
+        return Result.Success();
     }
 }

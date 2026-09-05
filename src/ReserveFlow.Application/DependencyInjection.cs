@@ -13,12 +13,33 @@ public static class DependencyInjection
 
         services.AddValidatorsFromAssembly(assembly);
         services.AddSingleton(TimeProvider.System);
-        services.AddHandlersFromAssembly(assembly);
+
+        services.Scan(scan => scan
+            .FromAssemblies(assembly)
+            .AddClasses(classes => classes
+                .AssignableTo(typeof(ICommandHandler<>))
+                .Where(IsHandlerImplementation), publicOnly: false)
+            .AsImplementedInterfaces()
+            .WithScopedLifetime()
+            .AddClasses(classes => classes
+                .AssignableTo(typeof(IQueryHandler<,>))
+                .Where(IsHandlerImplementation), publicOnly: false)
+            .AsImplementedInterfaces()
+            .WithScopedLifetime()
+            .AddClasses(classes => classes
+                .AssignableTo(typeof(ICommandHandler<,>))
+                .Where(IsHandlerImplementation), publicOnly: false)
+            .AsImplementedInterfaces()
+            .WithScopedLifetime());
+
+        //services.Decorate(typeof(ICommandHandler<>), typeof(LoggingCommandHandler<>));
+        //services.Decorate(typeof(ICommandHandler<,>), typeof(LoggingCommandHandler<,>));
+        //services.Decorate(typeof(IQueryHandler<,>), typeof(LoggingQueryHandler<,>));
 
         return services;
     }
 
-    private static void AddHandlersFromAssembly(this IServiceCollection services, Assembly assembly)
+    /*private static void AddHandlersFromAssembly(this IServiceCollection services, Assembly assembly)
     {
         Type[] openHandlerTypes =
         [
@@ -52,11 +73,17 @@ public static class DependencyInjection
                 }
             }
         }
-    }
+    }*/
+
+    private static bool IsHandlerImplementation(Type type) =>
+        type is { IsAbstract: false, IsInterface: false }
+        && type.Namespace?.EndsWith(".Behaviours", StringComparison.Ordinal) != true
+        && !type.Name.StartsWith("ExceptionMappingCommandHandler", StringComparison.Ordinal)
+        && !type.Name.StartsWith("LoggingCommandHandler", StringComparison.Ordinal)
+        && !type.Name.StartsWith("LoggingQueryHandler", StringComparison.Ordinal);
 
     private static bool IsConcreteClass(Type type) =>
-        type is { IsAbstract: false, IsInterface: false }
-        && !type.Name.StartsWith("ExceptionMappingCommandHandler", StringComparison.Ordinal);
+        IsHandlerImplementation(type);
 
     private static IEnumerable<Type> GetHandlerInterfaces(Type implementation, Type[] openHandlerTypes) =>
         implementation.GetInterfaces()

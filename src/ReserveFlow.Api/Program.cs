@@ -1,9 +1,6 @@
 using ReserveFlow.Api.Options;
 using ReserveFlow.Application;
-using ReserveFlow.Domain.Abstractions;
-using ReserveFlow.Domain.Catalog;
 using ReserveFlow.Infrastructure;
-using Wolverine;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,15 +20,6 @@ if (httpsOptions.Port is int httpsPort)
 {
     builder.Services.AddHttpsRedirection(options => options.HttpsPort = httpsPort);
 }
-builder.Host.UseWolverine(opts =>
-{
-    opts.Discovery.IncludeAssembly(typeof(ReserveFlow.Application.DependencyInjection).Assembly);
-
-    // EF Core DbContext / lambda kayıtları Wolverine codegen için "opaque";
-    // bu tipler service location ile çözülür (Wolverine 6 varsayılanı NotAllowed).
-    opts.CodeGeneration.AlwaysUseServiceLocationFor<IEventRepository>();
-    opts.CodeGeneration.AlwaysUseServiceLocationFor<IUnitOfWork>();
-});
 
 var app = builder.Build();
 app.UseMiddleware<ReserveFlow.Api.Middleware.ExceptionHandlingMiddleware>();

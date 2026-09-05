@@ -1,5 +1,4 @@
 using ReserveFlow.Domain.Abstractions;
-using ReserveFlow.Domain.Exceptions;
 using ReserveFlow.Domain.Shared;
 
 namespace ReserveFlow.Domain.Users;
@@ -33,13 +32,13 @@ public sealed class User : AggregateRoot
 
     public IReadOnlyList<RoleName> Roles => _roles;
 
-    public static User Register(Email email, string passwordHash, DateTime createdAtUtc)
+    public static Result<User> Register(Email email, string passwordHash, DateTime createdAtUtc)
     {
         ArgumentNullException.ThrowIfNull(email);
 
         if (string.IsNullOrWhiteSpace(passwordHash))
         {
-            throw new DomainValidationException("Password hash is required.");
+            return Result.Failure<User>(UserError.PasswordHashRequired);
         }
 
         var user = new User(

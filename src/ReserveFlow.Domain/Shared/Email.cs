@@ -1,6 +1,5 @@
 using System.Text.RegularExpressions;
 using ReserveFlow.Domain.Abstractions;
-using ReserveFlow.Domain.Exceptions;
 
 namespace ReserveFlow.Domain.Shared;
 
@@ -21,18 +20,18 @@ public sealed partial class Email : ValueObject
 
     public string Value { get; private set; }
 
-    public static Email Create(string value)
+    public static Result<Email> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new DomainValidationException("Email is required.");
+            return Result.Failure<Email>(EmailError.Required);
         }
 
         var normalized = value.Trim().ToLowerInvariant();
 
         if (normalized.Length > 256 || !EmailRegex.IsMatch(normalized))
         {
-            throw new DomainValidationException("Email format is invalid.");
+            return Result.Failure<Email>(EmailError.InvalidFormat);
         }
 
         return new Email(normalized);

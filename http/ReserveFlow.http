@@ -1,19 +1,19 @@
-### ReserveFlow API — REST Client
-### Extension: "REST Client" (Huachao Mao) — runs .http files
-### Base: http://localhost:5189
+# ReserveFlow API — REST Client
+# Extension: "REST Client" (Huachao Mao) / httpYac (httpBook) — runs .http files
+# Base: http://localhost:5189
 
 @baseUrl = http://localhost:5189
 @contentType = application/json
 
-### Paste ids from responses here (or capture them via @name)
-@userId = 3a809f18-1f34-43a6-8f12-b7df1626f155
+# Paste ids from responses here (or capture them via @name)
+@userId = 574e6031-fd46-4110-a3f2-be92265b58d1
 @organizerId = aea5fd68-556c-4481-9603-87da20870ea0
 @venueId = 8cb95869-a815-4106-ae7e-63e6f0d328f5
 @eventId = 00000000-0000-0000-0000-000000000000
 @accessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYTgwOWYxOC0xZjM0LTQzYTYtOGYxMi1iN2RmMTYyNmYxNTUiLCJlbWFpbCI6Im9yZ2FuaXplckBleGFtcGxlLmNvbSIsImp0aSI6IjBmMmUwNzljLWYxYmQtNGUzOC04ZTRlLTJiZDgxOTQzMjNkMSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkN1c3RvbWVyIiwibmJmIjoxNzg2NDcyNTE3LCJleHAiOjE3ODY0NzYxMTcsImlzcyI6IlJlc2VydmVGbG93IiwiYXVkIjoiUmVzZXJ2ZUZsb3cifQ.zpLygEHU65QWHK799JKokEtbMF6f5tqarQ2lgm6h1Ls
 
 ############################################
-### 1) Register User
+# 1) Register User
 ############################################
 # @name register
 POST {{baseUrl}}/api/v1/users/register
@@ -29,7 +29,7 @@ Content-Type: {{contentType}}
 # @userId = {{register.response.body.$.userId}}
 
 ############################################
-### 2) Login
+# 2) Login
 ############################################
 # @name login
 POST {{baseUrl}}/api/v1/users/login
@@ -45,7 +45,7 @@ Content-Type: {{contentType}}
 # @accessToken = {{login.response.body.$.accessToken}}
 
 ############################################
-### 3) Create Organizer Profile
+# 3) Create Organizer Profile
 ############################################
 # @name createOrganizer
 POST {{baseUrl}}/api/v1/organizers
@@ -61,7 +61,7 @@ Content-Type: {{contentType}}
 # @organizerId = {{createOrganizer.response.body.$.organizerId}}
 
 ############################################
-### 4) Create Venue
+# 4) Create Venue
 ############################################
 # @name createVenue
 POST {{baseUrl}}/api/v1/venues
@@ -81,7 +81,7 @@ Content-Type: {{contentType}}
 # @venueId = {{createVenue.response.body.$.venueId}}
 
 ############################################
-### 5) Create Event (Draft) + TicketTypes
+# 5) Create Event (Draft) + TicketTypes
 ############################################
 # @name createEvent
 POST {{baseUrl}}/api/v1/events
@@ -118,7 +118,7 @@ Content-Type: {{contentType}}
 # @eventId = {{createEvent.response.body.$.eventId}}
 
 ############################################
-### 6) Publish Event
+# 6) Publish Event
 ############################################
 # @name publishEvent
 POST {{baseUrl}}/api/v1/events/{{eventId}}/publish
@@ -126,7 +126,7 @@ POST {{baseUrl}}/api/v1/events/{{eventId}}/publish
 ###
 
 ############################################
-### 7) Cancel Event
+# 7) Cancel Event
 ############################################
 # @name cancelEvent
 POST {{baseUrl}}/api/v1/events/{{eventId}}/cancel
@@ -134,10 +134,10 @@ POST {{baseUrl}}/api/v1/events/{{eventId}}/cancel
 ###
 
 ############################################
-### Negative scenarios
+# Negative scenarios
 ############################################
 
-### Register — invalid email → 400
+# Register — invalid email → 400
 POST {{baseUrl}}/api/v1/users/register
 Content-Type: {{contentType}}
 
@@ -148,7 +148,7 @@ Content-Type: {{contentType}}
 
 ###
 
-### Create Event — unknown venue → 400
+# Create Event — unknown venue → 400
 POST {{baseUrl}}/api/v1/events
 Content-Type: {{contentType}}
 
@@ -173,7 +173,7 @@ Content-Type: {{contentType}}
 
 ###
 
-### Create Event — start >= end → 400
+# Create Event — start >= end → 400
 POST {{baseUrl}}/api/v1/events
 Content-Type: {{contentType}}
 
@@ -198,7 +198,7 @@ Content-Type: {{contentType}}
 
 ###
 
-### Create Venue — capacity 0 → 400
+# Create Venue — capacity 0 → 400
 POST {{baseUrl}}/api/v1/venues
 Content-Type: {{contentType}}
 
@@ -214,5 +214,5 @@ Content-Type: {{contentType}}
 
 ###
 
-### Health
+# Health
 GET {{baseUrl}}/api/v1/health

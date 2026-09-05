@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using ReserveFlow.Api.Controllers.Catalog.Dtos;
+using ReserveFlow.Api.Extensions;
 using ReserveFlow.Application.Catalog.CreateVenue;
 using ReserveFlow.Application.Messaging;
 
@@ -26,10 +27,14 @@ public sealed class VenuesController : ControllerBase
             request.Capacity,
             request.TimeZone);
 
-        var venueId = await handler.HandleAsync(command, cancellationToken);
+        var venueIdResult = await handler.HandleAsync(command, cancellationToken);
+        if (venueIdResult.IsFailure)
+        {
+            return venueIdResult.ToProblemDetails();
+        }
 
         return CreatedAtAction(
             nameof(Create),
-            new CreateVenueResponse(venueId));
+            new CreateVenueResponse(venueIdResult.Value));
     }
 }

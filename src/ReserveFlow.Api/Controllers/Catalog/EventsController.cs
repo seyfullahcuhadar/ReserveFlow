@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using ReserveFlow.Api.Controllers.Catalog.Dtos;
+using ReserveFlow.Api.Extensions;
 using ReserveFlow.Application.Catalog.CancelEvent;
 using ReserveFlow.Application.Catalog.CreateEvent;
 using ReserveFlow.Application.Catalog.PublishEvent;
 using ReserveFlow.Application.Messaging;
-using Wolverine;
 
 namespace ReserveFlow.Api.Controllers.Catalog;
 
@@ -37,11 +37,15 @@ public sealed class EventsController : ControllerBase
                     t.SalesEndAtUtc))
                 .ToList());
 
-        var eventId = await handler.HandleAsync(command, cancellationToken);
+        var eventIdResult = await handler.HandleAsync(command, cancellationToken);
+        if (eventIdResult.IsFailure)
+        {
+            return eventIdResult.ToProblemDetails();
+        }
 
         return CreatedAtAction(
             nameof(Create),
-            new CreateEventResponse(eventId));
+            new CreateEventResponse(eventIdResult.Value));
     }
 
     [HttpPost("{eventId:guid}/publish")]
@@ -53,7 +57,12 @@ public sealed class EventsController : ControllerBase
         [FromServices] ICommandHandler<PublishEventCommand> handler,
         CancellationToken cancellationToken)
     {
-        await handler.HandleAsync(new PublishEventCommand(eventId), cancellationToken);
+        var result = await handler.HandleAsync(new PublishEventCommand(eventId), cancellationToken);
+        if (result.IsFailure)
+        {
+            return result.ToProblemDetails();
+        }
+
         return NoContent();
     }
 
@@ -63,10 +72,15 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Cancel(
         Guid eventId,
-        IMessageBus bus,
+        [FromServices] ICommandHandler<CancelEventCommand> handler,
         CancellationToken cancellationToken)
     {
-        await bus.InvokeAsync(new CancelEventCommand(eventId), cancellationToken);
+        var result = await handler.HandleAsync(new CancelEventCommand(eventId), cancellationToken);
+        if (result.IsFailure)
+        {
+            return result.ToProblemDetails();
+        }
+
         return NoContent();
     }
 }

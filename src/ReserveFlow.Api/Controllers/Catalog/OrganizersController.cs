@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using ReserveFlow.Api.Controllers.Catalog.Dtos;
+using ReserveFlow.Api.Extensions;
 using ReserveFlow.Application.Catalog.CreateOrganizerProfile;
 using ReserveFlow.Application.Messaging;
 
@@ -19,10 +20,14 @@ public sealed class OrganizersController : ControllerBase
         CancellationToken cancellationToken)
     {
         var command = new CreateOrganizerProfileCommand(request.UserId, request.DisplayName, request.Bio);
-        var organizerId = await handler.HandleAsync(command, cancellationToken);
+        var organizerIdResult = await handler.HandleAsync(command, cancellationToken);
+        if (organizerIdResult.IsFailure)
+        {
+            return organizerIdResult.ToProblemDetails();
+        }
 
         return CreatedAtAction(
             nameof(Create),
-            new CreateOrganizerProfileResponse(organizerId));
+            new CreateOrganizerProfileResponse(organizerIdResult.Value));
     }
 }
